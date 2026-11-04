@@ -1,0 +1,51 @@
+#!/bin/sh
+# Finder launcher for TV Doctor.
+#
+# The binary is kept inside the bundle and run from there on purpose: macOS
+# grants Local Network access per app, and a process executed from outside the
+# bundle does not get the bundle's identity, so it is blocked with no prompt.
+set -e
+
+here=$(cd "$(dirname "$0")" && pwd)          # TV Doctor.app/Contents/MacOS
+inner="$here/tvdoctor"
+project=$(cd "$here/../../.." 2>/dev/null && pwd || echo "")
+built="$project/target/release/tvdoctor"
+
+# adb and openssl come from Homebrew, which is not on Finder's PATH.
+PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+export PATH
+export TVDOCTOR_LAUNCHED_FROM=bundle
+
+fail() {
+    osascript -e "display alert \"TV Doctor\" message \"$1\"" >/dev/null 2>&1
+    exit 1
+}
+
+bundle=$(cd "$here/../.." && pwd)
+
+# Re-sign after any change inside the bundle. Replacing the binary invalidates
+# the ad-hoc signature, and Finder then refuses to launch the app at all, with
+# no error shown. The signature also keeps the Local Network permission
+# attached to a stable identity across rebuilds.
+resign() {
+    codesign --force --deep --sign - "$bundle" >/dev/null 2>&1 || true
+}
+
+# Take a newly built binary from the project when there is one.
+if [ -x "$built" ] && { [ ! -x "$inner" ] || [ "$built" -nt "$inner" ]; }; then
+    cp -f "$built" "$inner" 2>/dev/null || true
+    resign
+fi
+
+if [ ! -x "$inner" ]; then
+    if command -v cargo >/dev/null 2>&1 && [ -f "$project/Cargo.toml" ]; then
+        osascript -e 'display notification "Building TV Doctor, one moment." with title "TV Doctor"' >/dev/null 2>&1
+        ( cd "$project" && cargo build --release ) || fail "Could not build. In Terminal, run: cargo build --release"
+        cp -f "$built" "$inner" || fail "Built, but could not copy the binary into the app."
+        resign
+    else
+        fail "TV Doctor is not built yet. In Terminal, run: cargo build --release"
+    fi
+fi
+
+exec "$inner" app

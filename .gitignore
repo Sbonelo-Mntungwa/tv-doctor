@@ -1,0 +1,26 @@
+# Rust build artifacts
+/target
+
+# Built binary and ad-hoc signature inside the app bundle.
+# scripts/build.sh (or the launcher, on first run) puts them back.
+/TV Doctor.app/Contents/MacOS/tvdoctor
+/TV Doctor.app/Contents/_CodeSignature/
+
+# Your own TV and network settings - NEVER commit these
+.env
+.env.local
+!.env.example
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+
+# Logs
+*.log

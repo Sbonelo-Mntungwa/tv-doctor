@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TV Doctor</title>
+<style>
+  /* Clinic surfaces in both themes. The monitor screen stays dark in both,
+     because that is the one part of the page pretending to be a CRT. */
+  :root {
+    --bg: #eef4f5;
+    --panel: #ffffff;
+    --line: #d4e1e3;
+    --rule: #bcd3d5;
+    --text: #0e2429;
+    --dim: #577078;
+    --accent: #0b8f88;
+    --accent-weak: #e0f2f0;
+    --ok: #0e7a46;
+    --warn: #8f5e00;
+    --bad: #bb2f36;
+    --screen: #04161a;
+    --screen-line: #0c2b31;
+    --phosphor: #74e0cc;
+    --s-ok: #5fdc9c;
+    --s-warn: #f2c65c;
+    --s-bad: #ff8077;
+    --shadow: 0 1px 2px rgba(14, 36, 41, 0.06), 0 6px 18px rgba(14, 36, 41, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #081215;
+      --panel: #0f1e22;
+      --line: #1d3339;
+      --rule: #27454c;
+      --text: #dfeff0;
+      --dim: #87a2a9;
+      --accent: #4fd1c5;
+      --accent-weak: #0e2a2c;
+      --ok: #45c884;
+      --warn: #dfb155;
+      --bad: #ff7b72;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* ---------- header: the clinic sign and the patient line ---------- */
+  header {
+    background: var(--panel); border-bottom: 1px solid var(--line);
+    padding: 18px 24px 0;
+  }
+  .top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .mark { flex: none; color: var(--accent); }
+  h1 {
+    font-size: 20px; margin: 0; letter-spacing: -0.015em; font-weight: 650;
+  }
+  .tagline {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--dim); margin-top: 2px;
+  }
+  .patient {
+    margin-left: auto; text-align: right; font-size: 12.5px; color: var(--dim);
+  }
+  .patient b { display: block; color: var(--text); font-size: 13.5px; font-weight: 600; }
+
+  /* ---------- vitals readout ---------- */
+  .vitals { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 0; }
+  .vital {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 4px 11px 4px 9px; border-radius: 5px;
+    border: 1px solid var(--line); color: var(--dim);
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .vital::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; opacity: 0.75;
+  }
+  .vital.on  { color: var(--ok);  border-color: var(--ok);  background: var(--accent-weak); }
+  .vital.off { color: var(--bad); border-color: var(--bad); }
+
+  /* ---------- the ECG strip that separates sign from chart ---------- */
+  .ecg { display: block; width: 100%; height: 26px; margin-top: 12px; }
+  .ecg path {
+    fill: none; stroke: var(--accent); stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1400; stroke-dashoffset: 0;
+    animation: sweep 9s linear infinite; opacity: 0.55;
+  }
+  body.busy .ecg path { animation-duration: 1.6s; opacity: 1; }
+  @keyframes sweep { from { stroke-dashoffset: 1400; } to { stroke-dashoffset: 0; } }
+
+  /* ---------- chart cards ---------- */
+  main {
+    padding: 20px 24px 28px; display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  section {
+    background: var(--panel); border: 1px solid var(--line);
+    border-top: 2px solid var(--rule);
+    border-radius: 4px 4px 10px 10px; padding: 15px 16px 16px;
+    box-shadow: var(--shadow);
+  }
+  section.treat { border-top-color: var(--accent); }
+  .kicker {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 3px;
+  }
+  h2 {
+    font-size: 15.5px; margin: 0 0 5px; font-weight: 640;
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  }
+  .note { color: var(--dim); font-size: 12.5px; margin: 0 0 13px; }
+  .badge {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 3px;
+    border: 1px solid var(--warn); color: var(--warn); font-weight: 600;
+  }
+  .badge.ready { border-color: var(--ok); color: var(--ok); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit; font-size: 13.5px; color: var(--text); cursor: pointer;
+    background: transparent; border: 1px solid var(--line);
+    border-radius: 7px; padding: 7px 13px; transition: border-color .12s, color .12s;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: 0.38; cursor: default; }
+  button.primary {
+    border-color: var(--accent); color: var(--accent);
+    background: var(--accent-weak); font-weight: 600;
+  }
+  button.danger:hover:not(:disabled) { border-color: var(--bad); color: var(--bad); }
+
+  /* ---------- channel rows ---------- */
+  .channel {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 0; border-bottom: 1px dashed var(--line);
+  }
+  .channel:last-of-type { border-bottom: 0; }
+  .channel .name { flex: 1; font-size: 13.5px; font-weight: 550; }
+  .channel .how {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px; color: var(--dim); letter-spacing: 0.03em;
+  }
+  .channel button { padding: 5px 11px; font-size: 12.5px; }
+
+  /* ---------- the monitor ---------- */
+  #logwrap {
+    grid-column: 1 / -1; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  #logbar {
+    display: flex; align-items: center; gap: 11px;
+    padding: 11px 15px; border-bottom: 1px solid var(--line);
+  }
+  #logbar h2 { margin: 0; font-size: 14px; }
+  #running {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--accent); display: none;
+  }
+  #running.on { display: inline-flex; align-items: center; gap: 7px; }
+  #running.on::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); animation: beat 1.1s ease-in-out infinite;
+  }
+  @keyframes beat { 0%,100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: .35; transform: scale(.7); } }
+  .bar-actions { margin-left: auto; display: flex; gap: 8px; }
+  .bar-actions button { padding: 4px 11px; font-size: 12.5px; }
+  /* Only offered while something is running, and never disabled with the rest,
+     because it is the way out of a long job. */
+  #cancel { display: none; border-color: var(--bad); color: var(--bad); }
+  body.busy #cancel { display: inline-block; }
+
+  .screen { position: relative; background: var(--screen); }
+  .screen::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom, rgba(255,255,255,.028) 0 1px, transparent 1px 3px);
+    box-shadow: inset 0 0 70px rgba(0,0,0,.55);
+  }
+  pre {
+    margin: 0; padding: 15px 16px; height: 350px; overflow: auto;
+    font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap; word-break: break-word;
+    color: var(--phosphor); text-shadow: 0 0 6px rgba(116,224,204,.18);
+  }
+  .l-ok { color: var(--s-ok); }
+  .l-warn { color: var(--s-warn); }
+  .l-bad { color: var(--s-bad); }
+  .l-cmd { color: #ffffff; font-weight: 600; }
+  .l-head { color: #ffffff; font-weight: 700; }
+
+  /* ---------- the permission notice ---------- */
+  #perm, #asleep {
+    margin: 18px 24px 0; padding: 14px 16px; border-radius: 8px;
+    border: 1px solid var(--warn); border-left-width: 3px;
+    background: var(--panel); font-size: 13.5px; display: none;
+  }
+  #asleep { border-color: var(--rule); border-left-color: var(--accent); }
+  #perm p, #asleep p { margin: 0 0 8px; }
+  #perm p:last-child, #asleep p:last-child { margin: 0; }
+
+  footer { padding: 2px 24px 26px; color: var(--dim); font-size: 12px; }
+  @media (max-width: 620px) {
+    .patient { margin-left: 0; text-align: left; width: 100%; }
+    header, main, footer { padding-left: 16px; padding-right: 16px; }
+    #perm, #asleep { margin-left: 16px; margin-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <svg class="mark" width="34" height="30" viewBox="0 0 34 30" aria-hidden="true">
+      <rect x="1.1" y="1.1" width="31.8" height="22" rx="3.4"
+            fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <path d="M17 7.4v9.2M12.4 12h9.2" stroke="currentColor"
+            stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M11 27.4h12M14.4 23.1l-1 4.3M19.6 23.1l1 4.3"
+            stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>TV Doctor</h1>
+      <div class="tagline">house calls for your television</div>
+    </div>
+    <div class="patient">
+      <b id="tvline">Admitting patient</b>
+      <span class="mono" id="tvsub">reading vital signs</span>
+    </div>
+  </div>
+
+  <div class="vitals">
+    <span class="vital" id="chip-awake">tv</span>
+    <span class="vital" id="chip-adb">adb</span>
+  </div>
+
+  <svg class="ecg" viewBox="0 0 1400 26" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 13h120l12-9 10 18 11-9h150l14-11 9 22 10-11h180l13-9 10 18 11-9h150
+             l14-11 9 22 10-11h180l13-9 10 18 11-9h190l14-11 9 22 10-11h160"/>
+  </svg>
+</header>
+
+<div id="perm">
+  <p><strong>macOS is stopping TV Doctor from reaching your television.</strong>
+  TV Doctor cannot see your router either, so this is a permission, not the set.
+  Apps opened from Finder need permission to find devices on your network.</p>
+  <p>Open <strong>System Settings, Privacy &amp; Security, Local Network</strong>
+  and switch on <strong>TV Doctor</strong>, then run Examine again. If TV Doctor
+  is not listed, quit and open it once more, then allow the prompt. Rebuilding
+  with build.sh gives the app a new signature, so macOS may ask again.</p>
+</div>
+
+<div id="asleep">
+  <p><strong>The television is not answering.</strong> The network is fine from
+  here, so the set is most likely in standby. Wake it with the remote, then run
+  Examine again.</p>
+</div>
+
+<main>
+  <section>
+    <div class="kicker">examination</div>
+    <h2>Check the patient over</h2>
+    <p class="note">Looks only, changes nothing. Works whether or not ADB is
+      reachable.</p>
+    <div class="row">
+      <button class="primary" data-cmd="remote-check">Examine</button>
+      <button data-cmd="status">Vital signs</button>
+      <button data-cmd="discover">Find the set</button>
+      <button data-cmd="routes">Check the channels</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker">channel control</div>
+    <h2>Start and stop apps</h2>
+    <p class="note">Stopping an app hands back the memory it was holding, which
+      is the quickest relief available without ADB.</p>
+    <div class="channel">
+      <span class="name">YouTube</span><span class="how">cast</span>
+      <button data-cmd="launch-youtube">Start</button>
+      <button data-cmd="stop-youtube">Stop</button>
+    </div>
+    <div class="channel">
+      <span class="name">Netflix</span><span class="how">dial</span>
+      <button data-cmd="launch-netflix">Start</button>
+      <button data-cmd="stop-netflix">Stop</button>
+    </div>
+    <div class="channel">
+      <span class="name">Spotify</span><span class="how">cast</span>
+      <button data-cmd="launch-spotify">Start</button>
+      <button data-cmd="stop-spotify">Stop</button>
+    </div>
+    <div class="channel">
+      <span class="name">DStv</span><span class="how">no receiver</span>
+      <button data-cmd="launch-dstv">Try anyway</button>
+      <button data-cmd="force-stop-dstv">Force stop</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button data-cmd="force-stop">Back to the home screen</button>
+    </div>
+    <p class="note" style="margin:10px 0 0">DStv answers neither protocol, so a
+      force stop takes the screen with an app that does and then ends it. That
+      drops DStv out of the foreground so Android can reclaim its memory. A true
+      force stop needs ADB.</p>
+  </section>
+
+  <section class="treat">
+    <div class="kicker">treatment</div>
+    <h2>Clean and speed up <span class="badge" id="adb-badge">needs adb</span></h2>
+    <p class="note">The real course of treatment. These drive the television
+      directly, so they only run while ADB is reachable.</p>
+    <div class="row">
+      <button class="primary" data-cmd="report">Full diagnosis</button>
+      <button data-cmd="clean">Clean</button>
+      <button data-cmd="optimize">Optimise</button>
+      <button data-cmd="bloat">Installed apps</button>
+      <button data-cmd="bloat-auto">Switch off extras</button>
+      <button data-cmd="update">Updates</button>
+      <button data-cmd="apps">App notes</button>
+      <button data-cmd="full">Whole course</button>
+      <button class="danger" data-cmd="reboot">Restart the set</button>
+      <button class="danger" data-cmd="restore">Undo my changes</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker">home care</div>
+    <h2>What to do with the remote</h2>
+    <p class="note">This set only exposes USB debugging, so the treatment above
+      cannot run over the network. Here is the same job, step by step, in the
+      order that matters.</p>
+    <div class="row">
+      <button class="primary" data-cmd="guide">Read the instructions</button>
+    </div>
+  </section>
+
+  <div id="logwrap">
+    <div id="logbar">
+      <h2>Monitor</h2>
+      <span id="running">working</span>
+      <div class="bar-actions">
+        <button id="cancel" class="danger">Stop</button>
+        <button id="clear">Clear</button>
+        <button id="quit" class="danger">Quit</button>
+      </div>
+    </div>
+    <div class="screen"><pre id="log">No readings yet. Pick something above and
+the output appears here, exactly as the command printed it.</pre></div>
+  </div>
+</main>
+
+<footer>
+  Every button runs the same tvdoctor command you could type yourself, and shows
+  you what it printed. Nothing is hidden and nothing is summarised.
+</footer>
+
+<script>
+  var next = 0, polling = false, fresh = true;
+  var log = document.getElementById('log');
+
+  function classFor(line) {
+    if (line.indexOf('$ tvdoctor') === 0) return 'l-cmd';
+    if (line.indexOf('OK   ') > -1) return 'l-ok';
+    if (line.indexOf('WARN ') > -1) return 'l-warn';
+    if (line.indexOf('FAIL ') > -1 || line.indexOf('error:') > -1) return 'l-bad';
+    if (/^[-]{3,}$/.test(line.trim())) return 'l-head';
+    return '';
+  }
+
+  function append(lines) {
+    if (fresh) { log.textContent = ''; fresh = false; }
+    lines.forEach(function (line) {
+      var span = document.createElement('span');
+      var cls = classFor(line);
+      if (cls) span.className = cls;
+      span.textContent = line + '\n';
+      log.appendChild(span);
+    });
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setBusy(busy) {
+    document.getElementById('running').className = busy ? 'on' : '';
+    document.body.className = busy ? 'busy' : '';
+    document.querySelectorAll('button[data-cmd]').forEach(function (b) {
+      b.disabled = busy;
+    });
+  }
+
+  function pollLog() {
+    fetch('/api/log?from=' + next).then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.lines.length) { append(data.lines); next = data.next; }
+        setBusy(data.running);
+        if (data.running) { setTimeout(pollLog, 600); }
+        else { polling = false; refreshState(); }
+      })
+      .catch(function () { polling = false; setBusy(false); });
+  }
+
+  function run(cmd) {
+    fetch('/api/run?cmd=' + encodeURIComponent(cmd), { method: 'POST' })
+      .then(function () {
+        setBusy(true);
+        if (!polling) { polling = true; pollLog(); }
+      });
+  }
+
+  function refreshState() {
+    fetch('/api/state').then(function (r) { return r.json(); })
+      .then(function (data) {
+        var tv = data.tv;
+        document.getElementById('tvline').textContent =
+          tv.ip ? (tv.model || 'Television') : 'No patient yet';
+        document.getElementById('tvsub').textContent = tv.ip
+          ? (tv.name ? '"' + tv.name + '", ' + tv.ip : tv.ip)
+          : 'press Find the set';
+
+        var awake = document.getElementById('chip-awake');
+        if (tv.awake) {
+          awake.textContent = 'tv responsive';
+          awake.className = 'vital on';
+        } else if (tv.down) {
+          awake.textContent = 'tv not responding';
+          awake.className = 'vital off';
+        } else {
+          awake.textContent = 'checking the set';
+          awake.className = 'vital';
+        }
+
+        var adb = document.getElementById('chip-adb');
+        adb.textContent = tv.adb ? 'adb ready' : 'adb unavailable';
+        adb.className = 'vital ' + (tv.adb ? 'on' : 'off');
+
+        var badge = document.getElementById('adb-badge');
+        badge.textContent = tv.adb ? 'ready' : 'needs adb';
+        badge.className = 'badge' + (tv.adb ? ' ready' : '');
+
+        var blocked = tv.down && tv.lan === false;
+        var standby = tv.down && tv.lan !== false;
+        document.getElementById('perm').style.display = blocked ? 'block' : 'none';
+        document.getElementById('asleep').style.display = standby ? 'block' : 'none';
+
+        if (data.running && !polling) { polling = true; pollLog(); }
+      })
+      .catch(function () {});
+  }
+
+  document.querySelectorAll('button[data-cmd]').forEach(function (b) {
+    b.addEventListener('click', function () { run(b.dataset.cmd); });
+  });
+  document.getElementById('cancel').addEventListener('click', function () {
+    fetch('/api/cancel', { method: 'POST' }).catch(function () {});
+  });
+  document.getElementById('clear').addEventListener('click', function () {
+    fetch('/api/clear', { method: 'POST' }).then(function () {
+      next = 0; fresh = true; log.textContent = 'Cleared.';
+    });
+  });
+  document.getElementById('quit').addEventListener('click', function () {
+    if (!confirm('Close TV Doctor?')) return;
+    fetch('/api/quit', { method: 'POST' }).catch(function () {});
+    document.body.innerHTML =
+      '<p style="padding:40px;font:15px -apple-system,sans-serif">' +
+      'TV Doctor has closed. You can shut this tab.</p>';
+  });
+
+  refreshState();
+  setInterval(refreshState, 5000);
+</script>
+</body>
+</html>
