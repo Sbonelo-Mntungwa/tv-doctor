@@ -24,7 +24,6 @@ const PAGE: &str = include_str!("app.html");
 fn actions() -> HashMap<&'static str, Vec<&'static str>> {
     HashMap::from([
         ("status", vec!["status"]),
-        ("discover", vec!["discover"]),
         ("remote-check", vec!["remote-check"]),
         ("routes", vec!["routes"]),
         ("guide", vec!["guide"]),
@@ -68,6 +67,85 @@ type Shared = Arc<Mutex<Job>>;
 /// time out. The browser now always gets an immediate answer, at the cost of
 /// it being a few seconds old.
 type Cache = Arc<Mutex<String>>;
+
+/// The home screen's network search, run off the request path so the page can
+/// show progress and poll for the answer.
+#[derive(Default)]
+struct Scan {
+    running: bool,
+    finished: bool,
+    subnet: String,
+    /// False when nothing answered and the router did not either, which points
+    /// at macOS Local Network permission rather than a TV in standby.
+    lan: bool,
+    results: Vec<net::Found>,
+}
+
+type ScanShared = Arc<Mutex<Scan>>;
+
+/// The /24 that `net::discover(None)` sweeps, for the home screen to name.
+fn local_subnet() -> String {
+    let ip = net::local_ipv4();
+    let mut parts: Vec<&str> = ip.split('.').collect();
+    parts.pop();
+    parts.join(".")
+}
+
+fn found_json(found: &net::Found) -> String {
+    format!(
+        "{{\"ip\":\"{}\",\"name\":\"{}\",\"model\":\"{}\",\"cast\":{},\"remote\":{},\"adb\":{}}}",
+        escape_json(&found.ip),
+        escape_json(&found.friendly_name),
+        escape_json(&found.describe()),
+        found.cast,
+        found.remote,
+        found.adb
+    )
+}
+
+fn start_scan(scan: &ScanShared) {
+    {
+        let mut state = scan.lock().unwrap();
+        if state.running {
+            return;
+        }
+        *state = Scan {
+            running: true,
+            subnet: local_subnet(),
+            lan: true,
+            ..Default::default()
+        };
+    }
+    let scan = Arc::clone(scan);
+    thread::spawn(move || {
+        let results = net::discover(None);
+        let lan = !results.is_empty() || net::lan_reachable();
+        let mut state = scan.lock().unwrap();
+        state.results = results;
+        state.lan = lan;
+        state.running = false;
+        state.finished = true;
+    });
+}
+
+fn scan_json(scan: &ScanShared) -> String {
+    let state = scan.lock().unwrap();
+    let results = state
+        .results
+        .iter()
+        .map(found_json)
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "{{\"running\":{},\"finished\":{},\"subnet\":\"{}\",\"lan\":{},\"bundle\":{},\"results\":[{}]}}",
+        state.running,
+        state.finished,
+        escape_json(&state.subnet),
+        state.lan,
+        from_bundle(),
+        results
+    )
+}
 
 fn escape_json(text: &str) -> String {
     let mut out = String::with_capacity(text.len() + 8);
@@ -243,7 +321,7 @@ fn respond(stream: &mut TcpStream, status: &str, content_type: &str, body: &str)
     let _ = stream.flush();
 }
 
-fn handle(mut stream: TcpStream, shared: Shared, cache: Cache) {
+fn handle(mut stream: TcpStream, shared: Shared, cache: Cache, scan: ScanShared) {
     let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
     let mut buffer = [0u8; 4096];
     let read = match stream.read(&mut buffer) {
@@ -273,6 +351,37 @@ fn handle(mut stream: TcpStream, shared: Shared, cache: Cache) {
                 tv
             );
             drop(job);
+            respond(&mut stream, "200 OK", "application/json", &body);
+        }
+
+        "/api/scan" => {
+            start_scan(&scan);
+            respond(&mut stream, "200 OK", "application/json", &scan_json(&scan));
+        }
+
+        "/api/scan/status" => {
+            respond(&mut stream, "200 OK", "application/json", &scan_json(&scan));
+        }
+
+        // Pick a TV from the home screen: remember it, then probe it once so
+        // the page can say whether it answered before entering the platform.
+        "/api/connect" => {
+            let ip = query_param(target, "ip").unwrap_or_default();
+            if ip.parse::<std::net::Ipv4Addr>().is_err() {
+                respond(
+                    &mut stream,
+                    "400 Bad Request",
+                    "application/json",
+                    "{\"ok\":false,\"error\":\"that is not an IP address\"}",
+                );
+                return;
+            }
+            config::remember_ip(&ip);
+            let (tv, _) = tv_state(false);
+            if let Ok(mut slot) = cache.lock() {
+                *slot = tv.clone();
+            }
+            let body = format!("{{\"ok\":true,\"tv\":{}}}", tv);
             respond(&mut stream, "200 OK", "application/json", &body);
         }
 
@@ -393,7 +502,16 @@ pub fn serve(opts: &Opts, port: u16, open_browser: bool) -> Result<(), String> {
     }
 
     let shared: Shared = Arc::new(Mutex::new(Job::default()));
-    let cache: Cache = Arc::new(Mutex::new(tv_state(false).0));
+    // A placeholder until the first probe lands, so the home screen opens at
+    // once instead of waiting on a television that may be in standby.
+    let remembered = config::load().ip.unwrap_or_default();
+    let cache: Cache = Arc::new(Mutex::new(format!(
+        "{{\"ip\":\"{}\",\"awake\":false,\"adb\":false,\"name\":\"\",\"model\":\"\",\
+         \"bundle\":{},\"lan\":true,\"down\":false,\"pending\":true}}",
+        escape_json(&remembered),
+        from_bundle()
+    )));
+    let scan: ScanShared = Arc::new(Mutex::new(Scan::default()));
 
     // Keep the TV state fresh off the request path, and only call the set quiet
     // once it has missed twice in a row.
@@ -415,7 +533,8 @@ pub fn serve(opts: &Opts, port: u16, open_browser: bool) -> Result<(), String> {
             Ok(stream) => {
                 let shared = Arc::clone(&shared);
                 let cache = Arc::clone(&cache);
-                thread::spawn(move || handle(stream, shared, cache));
+                let scan = Arc::clone(&scan);
+                thread::spawn(move || handle(stream, shared, cache, scan));
             }
             Err(_) => continue,
         }

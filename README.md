@@ -56,7 +56,8 @@ open "dist/TV Doctor.app"
 ```
 
 The window opens in your browser at `http://127.0.0.1:8787`. Nothing leaves your
-Mac. To keep the app, drag `dist/TV Doctor.app` to your Applications folder.
+Mac. Press **Find my TV**, pick your TV from the list, and TV Doctor connects
+to it and opens the controls. Next time it offers your TV straight away. To keep the app, drag `dist/TV Doctor.app` to your Applications folder.
 
 The first time, macOS asks whether TV Doctor may find devices on your local
 network. Choose **Allow**.
