@@ -83,8 +83,7 @@ fn json_string_array(text: &str, key: &str) -> Vec<String> {
     out
 }
 
-/// What is saved in config.json, without the .env overrides.
-fn load_file() -> Config {
+pub fn load() -> Config {
     let Ok(text) = fs::read_to_string(config_path()) else {
         return Config::default();
     };
@@ -92,23 +91,6 @@ fn load_file() -> Config {
         ip: json_string(&text, "ip").filter(|ip| !ip.is_empty()),
         keep: json_string_array(&text, "keep"),
     }
-}
-
-/// The settings in effect: config.json, with TVDOCTOR_IP taking the place of
-/// the remembered address and TVDOCTOR_KEEP added to the keep list.
-pub fn load() -> Config {
-    let mut cfg = load_file();
-    if let Some(ip) = crate::env::get("TVDOCTOR_IP") {
-        cfg.ip = Some(ip);
-    }
-    if let Some(keep) = crate::env::get("TVDOCTOR_KEEP") {
-        for pkg in keep.split(',').map(str::trim).filter(|p| !p.is_empty()) {
-            if !cfg.keep.iter().any(|k| k == pkg) {
-                cfg.keep.push(pkg.to_string());
-            }
-        }
-    }
-    cfg
 }
 
 pub fn save(cfg: &Config) {
@@ -128,7 +110,7 @@ pub fn save(cfg: &Config) {
 }
 
 pub fn remember_ip(ip: &str) {
-    let mut cfg = load_file();
+    let mut cfg = load();
     cfg.ip = Some(ip.to_string());
     save(&cfg);
 }

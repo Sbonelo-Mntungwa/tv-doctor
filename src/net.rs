@@ -294,8 +294,7 @@ fn probe_host(ip: String) -> Option<Found> {
 
 /// Sweep a /24 for anything that answers like an Android TV.
 pub fn discover(subnet: Option<&str>) -> Vec<Found> {
-    let from_env = crate::env::get("TVDOCTOR_SUBNET");
-    let base = match subnet.or(from_env.as_deref()) {
+    let base = match subnet {
         Some(s) => s.trim_end_matches('.').to_string(),
         None => {
             let ip = local_ipv4();

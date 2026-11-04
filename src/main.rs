@@ -1,14 +1,13 @@
 //! tvdoctor - find, inspect, clean and speed up an Android TV over the network.
 //!
-//! Works with any Android TV on the local network. Per-user settings (the TV's
-//! address, extra protected apps) come from a `.env` file; see `.env.example`.
+//! Works with any Android TV on the local network. The TV is found with
+//! `discover` and remembered in ~/.config/tvdoctor/config.json.
 
 mod adb;
 mod cast;
 mod catalog;
 mod cmds;
 mod config;
-mod env;
 mod menu;
 mod net;
 mod server;
@@ -167,7 +166,6 @@ fn run() -> Result<(), String> {
                 .rest
                 .first()
                 .and_then(|v| v.parse::<u16>().ok())
-                .or_else(|| env::get("TVDOCTOR_PORT").and_then(|v| v.parse().ok()))
                 .unwrap_or(8787);
             return server::serve(&opts, port, !opts.no_open);
         }
@@ -229,7 +227,6 @@ fn run() -> Result<(), String> {
 }
 
 fn main() {
-    env::load();
     if let Err(message) = run() {
         bad(&message);
         eprintln!("{} {}", ui::c("31", "error:"), message);

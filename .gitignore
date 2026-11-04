@@ -4,11 +4,6 @@
 # The assembled macOS app (scripts/build.sh makes it from macos/)
 /dist
 
-# Your own TV and network settings - NEVER commit these
-.env
-.env.local
-!.env.example
-
 # Editor files
 *.swp
 *.swo

@@ -48,13 +48,10 @@ brew install --cask android-platform-tools
 git clone https://github.com/Sbonelo-Mntungwa/tv-doctor.git
 cd tv-doctor
 
-# 2. Add your own TV (optional, see Configuration)
-cp .env.example .env
-
-# 3. Build the tool and the app
+# 2. Build the tool and the app
 ./scripts/build.sh
 
-# 4. Open it
+# 3. Open it
 open "dist/TV Doctor.app"
 ```
 
@@ -64,23 +61,25 @@ Mac. To keep the app, drag `dist/TV Doctor.app` to your Applications folder.
 The first time, macOS asks whether TV Doctor may find devices on your local
 network. Choose **Allow**.
 
-## Configuration
+## Your TV
 
-Your TV and network settings go in `.env`, which git ignores, so they stay on
-your machine. Every value is optional.
+TV Doctor searches your network for the TV and remembers its address in
+`~/.config/tvdoctor/config.json`, outside the project, so there is nothing to
+set up. No Wi-Fi details are needed: your Mac only has to be on the same
+network as the TV.
 
-| Variable | What it is | Example |
-|----------|------------|---------|
-| `TVDOCTOR_IP` | Your TV's address | `192.168.1.20` |
-| `TVDOCTOR_SUBNET` | The network to search, if it searches the wrong one (on a VPN, say) | `192.168.1` |
-| `TVDOCTOR_KEEP` | Extra apps to protect, comma separated | `com.showmax.app` |
-| `TVDOCTOR_PORT` | Port for the window | `8787` |
+If it picks the wrong TV or searches the wrong network, tell it directly:
 
-With nothing set, TV Doctor finds the TV itself and remembers it in
-`~/.config/tvdoctor/config.json`.
+```bash
+./target/release/tvdoctor --ip 192.168.1.20 connect   # a specific TV, remembered from then on
+./target/release/tvdoctor discover --subnet 192.168.1 # search a specific network
+```
 
-No Wi-Fi details are needed. TV Doctor only has to be on the same network as
-the TV, and never reads or stores a Wi-Fi name or password.
+To protect extra apps from `bloat`, add them to the config file:
+
+```json
+{ "ip": "192.168.1.20", "keep": ["com.showmax.app"] }
+```
 
 ### Find Your TV's IP
 
@@ -131,7 +130,6 @@ Run these as `./target/release/tvdoctor` from the project folder. Add
 ```
 tv-doctor/
 ├── README.md               # This file
-├── .env.example            # Template for your own .env
 ├── Cargo.toml
 ├── scripts/
 │   └── build.sh            # Build, then assemble dist/TV Doctor.app
@@ -148,7 +146,6 @@ tv-doctor/
     ├── net.rs              # Finding the TV on the network
     ├── catalog.rs          # Protected apps and known bloat
     ├── config.rs           # Remembered TV and undo journal
-    ├── env.rs              # Reading .env
     ├── menu.rs             # The terminal menu
     └── ui.rs               # Terminal output
 ```
@@ -159,10 +156,10 @@ tv-doctor/
 |---------|-------|----------|
 | App will not open from Finder | Signature out of date | Run `./scripts/build.sh` again |
 | App says the TV is off, terminal works | Local Network permission off | **System Settings > Privacy & Security > Local Network**, switch on TV Doctor |
-| `no Android TV found` | TV in standby, or wrong network | Wake the TV, check both are on the same network, or set `TVDOCTOR_SUBNET` |
+| `no Android TV found` | TV in standby, or wrong network | Wake the TV, check both are on the same network, or use `discover --subnet` |
 | `cannot reach ADB` | Network debugging off | See [Switching On ADB](#switching-on-adb-for-clean-optimise-and-bloat) |
-| Wrong TV picked | More than one TV found | Set `TVDOCTOR_IP` in `.env` |
-| `could not listen on 127.0.0.1:8787` | Port in use | Set `TVDOCTOR_PORT` to another port |
+| Wrong TV picked | More than one TV found | Run `tvdoctor --ip ADDRESS connect` |
+| `could not listen on 127.0.0.1:8787` | Port in use | Run `tvdoctor app 9000` for another port |
 
 ## License
 
