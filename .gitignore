@@ -1,8 +1,8 @@
 # Rust build artifacts
 /target
 
-# The assembled macOS app (scripts/build.sh makes it from macos/)
-/dist
+# A macOS app assembled by hand inside the checkout
+/*.app
 
 # Editor files
 *.swp

@@ -6,11 +6,12 @@
 # bundle does not get the bundle's identity, so it is blocked with no prompt.
 set -e
 
-here=$(cd "$(dirname "$0")" && pwd)          # dist/TV Doctor.app/Contents/MacOS
+here=$(cd "$(dirname "$0")" && pwd)          # ~/Applications/TVDoctor.app/Contents/MacOS
 inner="$here/tvdoctor"
-# The project folder, when the app is still in dist/. Empty once it has been
-# moved elsewhere, such as /Applications, and then only the inner copy is used.
-project=$(cd "$here/../../../.." 2>/dev/null && pwd || echo "")
+# scripts/build.sh installs a fresh binary each time, so the inner copy is
+# normally all there is. The project folder is only found when the app sits
+# directly inside a checkout (TVDoctor.app next to Cargo.toml).
+project=$(cd "$here/../../.." 2>/dev/null && pwd || echo "")
 [ -f "$project/Cargo.toml" ] || project=""
 built="$project/target/release/tvdoctor"
 

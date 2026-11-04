@@ -240,7 +240,7 @@ fn start_job(shared: &Shared, label: &str, args: &[&str]) {
     });
 }
 
-/// True when Finder started us through TV Doctor.app. macOS gates local network
+/// True when Finder started us through TVDoctor.app. macOS gates local network
 /// access per app, so a bundle launch that cannot see the TV usually means the
 /// permission has not been granted rather than that the TV is off.
 fn from_bundle() -> bool {

@@ -54,12 +54,16 @@ cd tv-doctor
 ./scripts/build.sh
 
 # 3. Open it
-open "dist/TV Doctor.app"
+open -a TVDoctor
 ```
+
+`scripts/build.sh` installs the app as `TVDoctor.app` in your own
+`~/Applications` folder, so after the first build you can also open it from
+Spotlight or Launchpad by typing **TV Doctor**, or keep it in your Dock.
 
 The window opens in your browser at `http://127.0.0.1:8787`. Nothing leaves your
 Mac. Press **Find my TV**, pick your TV from the list, and TV Doctor connects
-to it and opens the controls. Next time it offers your TV straight away. To keep the app, drag `dist/TV Doctor.app` to your Applications folder.
+to it and opens the controls. Next time it offers your TV straight away.
 
 The first time, macOS asks whether TV Doctor may find devices on your local
 network. Choose **Allow**.
@@ -135,7 +139,7 @@ tv-doctor/
 ├── README.md               # This file
 ├── Cargo.toml
 ├── scripts/
-│   └── build.sh            # Build, then assemble dist/TV Doctor.app
+│   └── build.sh            # Build, then install ~/Applications/TVDoctor.app
 ├── docs/
 │   └── images/
 │       └── banner.png      # The banner at the top of this file
