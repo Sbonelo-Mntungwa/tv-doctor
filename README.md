@@ -1,3 +1,5 @@
+<img src="docs/images/banner.png" alt="TV Doctor" width="100%">
+
 # TV Doctor
 
 A Rust tool and macOS app that speeds up an old Android TV over your home network.
@@ -134,8 +136,12 @@ tv-doctor/
 ├── Cargo.toml
 ├── scripts/
 │   └── build.sh            # Build, then assemble dist/TV Doctor.app
+├── docs/
+│   └── images/
+│       └── banner.png      # The banner at the top of this file
 ├── macos/
 │   ├── Info.plist          # The app's details for macOS
+│   ├── AppIcon.icns        # The app icon
 │   └── launch              # What runs when you open the app
 └── src/
     ├── main.rs             # Commands and arguments

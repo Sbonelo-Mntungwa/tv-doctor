@@ -5,242 +5,248 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>TV Doctor</title>
+<link rel="icon" id="favicon" href="data:,">
 <style>
-  /* Blue green, with white. The gradient carries the brand on the home screen
-     and the platform header; everything you read sits on white. The monitor
-     stays dark, because it is the one part of the page pretending to be a CRT. */
+  /* The clinic palette: a light blue-green surface, white cards, teal accent,
+     and a dark variant. The monitor stays dark in both, because it is the one
+     part of the page pretending to be a CRT. */
   :root {
-    --grad: linear-gradient(135deg, #0aa596 0%, #0b88ad 55%, #1b5fb8 100%);
-    --teal: #0aa596;
-    --blue: #1b5fb8;
-    --bg: #f2f9fa;
+    --bg: #eef4f5;
     --panel: #ffffff;
-    --line: #dbecee;
-    --rule: #c2dfe2;
-    --text: #0a2730;
-    --dim: #5a7880;
-    --accent: #0a8a96;
-    --accent-weak: #e2f5f4;
-    --ok: #0d8a55;
-    --warn: #a06800;
-    --bad: #c2343c;
-    --screen: #04191f;
-    --phosphor: #7fe8d6;
+    --line: #d4e1e3;
+    --rule: #bcd3d5;
+    --text: #0e2429;
+    --dim: #577078;
+    --accent: #0b8f88;
+    --accent-weak: #e0f2f0;
+    --accent-glow: rgba(11, 143, 136, .16);
+    --amber: #d9a21f;
+    --ok: #0e7a46;
+    --warn: #8f5e00;
+    --bad: #bb2f36;
+    --screen: #04161a;
+    --phosphor: #74e0cc;
     --s-ok: #5fdc9c;
     --s-warn: #f2c65c;
     --s-bad: #ff8077;
-    --shadow: 0 1px 2px rgba(10, 39, 48, 0.06), 0 8px 24px rgba(10, 39, 48, 0.06);
-    --lift: 0 24px 60px rgba(4, 40, 60, 0.28);
+    --shadow: 0 1px 2px rgba(14, 36, 41, 0.05), 0 4px 14px rgba(14, 36, 41, 0.04);
+    --lift: 0 2px 4px rgba(14, 36, 41, 0.04), 0 16px 40px rgba(14, 36, 41, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #081215;
+      --panel: #0f1e22;
+      --line: #1d3339;
+      --rule: #27454c;
+      --text: #dfeff0;
+      --dim: #87a2a9;
+      --accent: #4fd1c5;
+      --accent-weak: #0e2a2c;
+      --accent-glow: rgba(79, 209, 197, .12);
+      --amber: #dfb155;
+      --ok: #45c884;
+      --warn: #dfb155;
+      --bad: #ff7b72;
+      --shadow: none;
+      --lift: 0 16px 40px rgba(0, 0, 0, .35);
+    }
   }
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html, body { min-height: 100%; }
   body {
     margin: 0; background: var(--bg); color: var(--text);
     font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
 
   button {
     font: inherit; font-size: 13.5px; color: var(--text); cursor: pointer;
-    background: transparent; border: 1px solid var(--line);
-    border-radius: 8px; padding: 7px 13px;
-    transition: border-color .15s, color .15s, background .15s, transform .15s, box-shadow .15s;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 14px;
+    transition: border-color .15s, color .15s, background .15s, transform .15s;
   }
   button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   button:disabled { opacity: 0.38; cursor: default; }
-  button:focus-visible, input:focus-visible {
-    outline: 2px solid var(--teal); outline-offset: 2px;
-  }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   button.primary {
-    border-color: transparent; color: #fff; background: var(--grad); font-weight: 600;
-  }
-  button.primary:hover:not(:disabled) {
-    color: #fff; border-color: transparent; box-shadow: 0 6px 16px rgba(11, 136, 173, .3);
+    border-color: var(--accent); color: var(--accent);
+    background: var(--accent-weak); font-weight: 600;
   }
   button.danger:hover:not(:disabled) { border-color: var(--bad); color: var(--bad); }
-  button.link {
-    border: 0; padding: 4px 2px; color: var(--accent); font-weight: 550;
-  }
+  button.link { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 550; }
   button.link:hover:not(:disabled) { text-decoration: underline; }
+
+  /* =================================================================== */
+  /*  The mark: TV D(scope)CTOR                                           */
+  /* =================================================================== */
+  /* The O of DOCTOR is a vital-signs scope that shows the connection: a
+     sweep while searching, every segment lit when the TV is connected with
+     ADB, the ADB quarter breathing amber where it is missing, and a flat line
+     when the set does not answer. */
+  .word {
+    display: inline-flex; align-items: center; margin: 0;
+    font-weight: 800; line-height: 1; letter-spacing: .14em; white-space: nowrap; color: var(--text);
+  }
+  .word .sp { width: .34em; }
+  .word .scope { flex: none; width: 1.22em; height: 1.22em; margin: 0 .12em 0 .02em; overflow: visible; }
+
+  .sc-ring { fill: none; stroke: var(--accent); stroke-width: 4.5; }
+  .sc-ring.thin { stroke-width: 1.2; stroke-opacity: .45; }
+  .sc-seg { fill: var(--accent); fill-opacity: .16; transition: fill-opacity .5s; }
+  .sc-spin circle { fill: none; stroke: var(--accent); stroke-opacity: .55; stroke-dasharray: 4 6; }
+  .sc-spin { animation: spin 14s linear infinite; transform-origin: 0 0; }
+  .sc-glow { fill: var(--accent); opacity: .1; transition: opacity .5s; }
+  .sc-ecg {
+    fill: none; stroke: var(--accent); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 100; animation: trace 2.4s linear infinite;
+  }
+  @keyframes trace { from { stroke-dashoffset: 100; } to { stroke-dashoffset: -100; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .scope[data-state="scan"] .sc-seg { animation: comet 1.2s linear infinite; animation-delay: calc(var(--i) * 0.05s); }
+  @keyframes comet { 0% { fill-opacity: 1; } 35%, 100% { fill-opacity: .14; } }
+  .scope[data-state="scan"] .sc-spin { animation-duration: 2.4s; }
+  .scope[data-state="scan"] .sc-ecg { animation-duration: 1.2s; }
+  .scope[data-state="link"] .sc-seg, .scope[data-state="noadb"] .sc-seg { fill-opacity: 1; }
+  .scope[data-state="link"] .sc-glow, .scope[data-state="noadb"] .sc-glow { opacity: .2; }
+  .scope[data-state="noadb"] .sc-seg.adb { fill: var(--amber); animation: breathe 2.2s ease-in-out infinite; }
+  @keyframes breathe { 50% { fill-opacity: .35; } }
+  .scope[data-state="down"] .sc-ring { stroke-opacity: .4; }
+  .scope[data-state="down"] .sc-seg { fill-opacity: .1; }
+  .scope[data-state="down"] .sc-glow { opacity: 0; }
+  .scope[data-state="down"] .sc-ecg { animation: none; stroke-dasharray: none; stroke-opacity: .45; }
+  .scope[data-state="down"] .sc-spin { animation-play-state: paused; }
+  body.busy .scope .sc-spin { animation-duration: 1.4s; }
+  body.busy .scope .sc-ecg { animation-duration: .9s; }
+
+  .tagline {
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+  }
 
   /* =================================================================== */
   /*  Home                                                                */
   /* =================================================================== */
   #home {
     position: relative; min-height: 100vh; overflow: hidden;
-    background: var(--grad); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    padding: 40px 16px;
+    display: flex; align-items: center; justify-content: center; padding: 48px 16px;
+    background:
+      radial-gradient(900px 520px at 50% 0%, var(--accent-glow), transparent 70%),
+      var(--bg);
   }
-  /* Soft light drifting over the gradient. */
-  .glow {
-    position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5;
-    pointer-events: none; animation: drift 18s ease-in-out infinite alternate;
-  }
-  .glow.a { width: 520px; height: 520px; background: #3fe0c8; top: -160px; left: -120px; }
-  .glow.b { width: 460px; height: 460px; background: #5aa9ff; bottom: -180px; right: -100px;
-            animation-delay: -6s; }
-  .glow.c { width: 300px; height: 300px; background: #ffffff; opacity: .18;
-            top: 40%; left: 55%; animation-delay: -11s; }
-  @keyframes drift {
-    from { transform: translate(0, 0) scale(1); }
-    to   { transform: translate(40px, 30px) scale(1.12); }
-  }
-  /* A faint grid, like a signal map. */
-  #home::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background-image:
-      linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
-  }
-
-  .home-inner { position: relative; width: 100%; max-width: 480px; text-align: center; }
-  .brand { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 26px; }
-  .brand .mark {
-    width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center;
-    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35);
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  }
-  .brand h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -0.025em; }
-  .brand .tagline {
-    font-size: 12px; letter-spacing: .16em; text-transform: uppercase; opacity: .85;
-  }
+  .home-inner { position: relative; width: 100%; max-width: 460px; text-align: center; }
+  .brand { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 30px; }
+  .brand .word { font-size: 46px; }
 
   .stage {
-    background: #fff; color: var(--text); border-radius: 22px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
     box-shadow: var(--lift); padding: 30px 28px 26px; text-align: center;
   }
   .pane { animation: rise .35s ease both; }
   @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  .stage h2 { margin: 0 0 6px; font-size: 21px; letter-spacing: -0.015em; font-weight: 680; }
+  .stage h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: -0.01em; font-weight: 660; }
   .stage .lede { margin: 0 auto 22px; color: var(--dim); font-size: 14px; max-width: 38ch; }
   .big {
-    width: 100%; font-size: 16px; padding: 14px 18px; border-radius: 14px;
+    width: 100%; font-size: 15px; padding: 13px 18px; border-radius: 12px;
     display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   }
-  .big:hover:not(:disabled) { transform: translateY(-1px); }
   .stack { display: grid; gap: 10px; }
   .or {
     display: flex; align-items: center; gap: 12px; color: var(--dim);
-    font-size: 12px; text-transform: uppercase; letter-spacing: .12em; margin: 18px 0 12px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .14em; margin: 18px 0 12px;
   }
   .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
-  /* A TV tile: remembered TV, and each scan result. */
   .tv-item {
-    width: 100%; display: flex; align-items: center; gap: 14px; text-align: left;
-    padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line);
-    background: #fff;
+    width: 100%; min-width: 0; display: flex; align-items: center; gap: 14px; text-align: left;
+    padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel);
   }
-  .tv-item:hover:not(:disabled) {
-    border-color: var(--teal); color: inherit; transform: translateY(-1px);
-    box-shadow: 0 8px 22px rgba(10, 165, 150, .14);
-  }
+  .tv-item:hover:not(:disabled) { border-color: var(--accent); color: inherit; background: var(--accent-weak); }
   .tv-item .ico {
-    flex: none; width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+    flex: none; width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center;
     background: var(--accent-weak); color: var(--accent);
   }
-  .tv-item { min-width: 0; }
   .tv-item .meta { flex: 1; min-width: 0; display: block; }
-  .tv-item .title, .tv-item .sub { display: block; }
-  .tv-item .title { font-weight: 640; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tv-item .sub { color: var(--dim); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tv-item .title, .tv-item .sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tv-item .title { font-weight: 620; font-size: 15px; }
+  .tv-item .sub { color: var(--dim); font-size: 12.5px; }
   .tv-item .go { flex: none; color: var(--accent); font-weight: 600; font-size: 13px; }
   .tags { display: flex !important; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
   .tag {
     font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
     text-transform: uppercase; letter-spacing: .06em;
-    padding: 4px 6px; border-radius: 4px; background: var(--accent-weak); color: var(--accent);
+    padding: 4px 6px; border-radius: 4px; border: 1px solid var(--accent); color: var(--accent);
   }
-  .tag.off { background: #f3f5f6; color: var(--dim); }
+  .tag.off { border-color: var(--line); color: var(--dim); }
   .results { display: grid; gap: 10px; margin-bottom: 18px; max-height: 340px; overflow: auto; padding: 2px; }
   .actions { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
 
-  /* Manual address. */
   .manual { display: flex; gap: 8px; margin-top: 14px; }
   .manual input {
     flex: 1; min-width: 0; font: 15px ui-monospace, SFMono-Regular, Menlo, monospace;
-    padding: 11px 13px; border-radius: 10px; border: 1px solid var(--rule); color: var(--text);
+    padding: 11px 13px; border-radius: 10px; border: 1px solid var(--rule);
+    background: var(--panel); color: var(--text);
   }
   .manual button { padding: 0 18px; border-radius: 10px; }
   .error { color: var(--bad); font-size: 13px; margin: 8px 0 0; min-height: 1em; }
 
-  /* Radar while searching. */
   .radar {
-    position: relative; width: 190px; height: 190px; margin: 4px auto 22px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--accent-weak) 0 30%, #f4fbfb 31% 100%);
-    border: 1px solid var(--line); overflow: hidden;
+    position: relative; width: 180px; height: 180px; margin: 4px auto 22px;
+    border-radius: 50%; background: var(--accent-weak); border: 1px solid var(--line); overflow: hidden;
   }
-  .radar::before, .radar::after {
-    content: ""; position: absolute; border-radius: 50%; border: 1px solid var(--rule);
-  }
+  .radar::before, .radar::after { content: ""; position: absolute; border-radius: 50%; border: 1px solid var(--rule); }
   .radar::before { inset: 22%; }
   .radar::after { inset: 40%; }
   .sweep {
     position: absolute; inset: 0; border-radius: 50%;
-    background: conic-gradient(from 0deg, rgba(10,165,150,.45), rgba(10,165,150,0) 70deg, transparent 360deg);
-    animation: spin 2.2s linear infinite;
+    background: conic-gradient(from 0deg, var(--accent-glow), transparent 70deg, transparent 360deg);
+    animation: spin 2.2s linear infinite; opacity: 1;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
   .ping {
     position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px;
-    border-radius: 50%; border: 2px solid var(--teal); opacity: 0;
-    animation: ping 2.4s ease-out infinite;
+    border-radius: 50%; border: 2px solid var(--accent); opacity: 0; animation: ping 2.4s ease-out infinite;
   }
   .ping.two { animation-delay: .8s; }
   .ping.three { animation-delay: 1.6s; }
-  @keyframes ping { 0% { transform: scale(.6); opacity: .8; } 100% { transform: scale(3.2); opacity: 0; } }
+  @keyframes ping { 0% { transform: scale(.6); opacity: .7; } 100% { transform: scale(3.2); opacity: 0; } }
   .radar .core {
-    position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px;
-    border-radius: 16px; background: var(--grad); color: #fff; display: grid; place-items: center;
-    box-shadow: 0 8px 20px rgba(11, 136, 173, .35);
+    position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px;
+    border-radius: 15px; background: var(--panel); color: var(--accent); border: 1px solid var(--accent);
+    display: grid; place-items: center;
   }
 
-  /* Connecting: laptop, a moving signal, the TV. */
-  .link-anim { display: flex; align-items: center; justify-content: center; gap: 0; margin: 6px 0 22px; }
+  .link-anim { display: flex; align-items: center; justify-content: center; margin: 6px 0 22px; }
   .node {
-    width: 62px; height: 62px; border-radius: 18px; display: grid; place-items: center;
-    background: var(--accent-weak); color: var(--accent); flex: none;
+    width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; flex: none;
+    background: var(--accent-weak); color: var(--accent); border: 1px solid var(--line);
   }
-  .node.tv { background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(11,136,173,.3); }
+  .node.tv { border-color: var(--accent); }
   .wire {
-    position: relative; width: 120px; height: 4px; margin: 0 10px; border-radius: 4px;
-    background: repeating-linear-gradient(90deg, var(--rule) 0 6px, transparent 6px 12px);
-    overflow: hidden;
+    position: relative; width: 120px; height: 3px; margin: 0 10px; border-radius: 3px;
+    background: repeating-linear-gradient(90deg, var(--rule) 0 6px, transparent 6px 12px); overflow: hidden;
   }
   .wire::after {
     content: ""; position: absolute; top: 0; left: -30%; width: 30%; height: 100%;
-    background: var(--grad); border-radius: 4px; animation: flow 1.1s ease-in-out infinite;
+    background: var(--accent); border-radius: 3px; animation: flow 1.1s ease-in-out infinite;
   }
-  .stage.ok .wire { background: var(--grad); }
+  .stage.ok .wire { background: var(--accent); }
   .stage.ok .wire::after, .stage.fail .wire::after { display: none; }
-  .stage.fail .wire { background: repeating-linear-gradient(90deg, #f0c9cb 0 6px, transparent 6px 12px); }
+  .stage.fail .wire { background: repeating-linear-gradient(90deg, var(--bad) 0 6px, transparent 6px 12px); opacity: .5; }
   @keyframes flow { to { left: 100%; } }
 
   .steps { list-style: none; padding: 0; margin: 0 auto 6px; max-width: 290px; text-align: left; }
-  .steps li {
-    display: flex; align-items: center; gap: 11px; padding: 7px 0; color: var(--dim); font-size: 14px;
-  }
+  .steps li { display: flex; align-items: center; gap: 11px; padding: 7px 0; color: var(--dim); font-size: 14px; }
   .steps .dot {
     flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
     border: 2px solid var(--line); font-size: 12px; font-weight: 700; color: #fff;
   }
-  .steps li.active { color: var(--text); }
-  .steps li.active .dot {
-    border-color: var(--teal); border-right-color: transparent; animation: spin .8s linear infinite;
-  }
-  .steps li.done { color: var(--text); }
-  .steps li.done .dot { background: var(--teal); border-color: var(--teal); }
+  .steps li.active, .steps li.done, .steps li.soft { color: var(--text); }
+  .steps li.active .dot { border-color: var(--accent); border-right-color: transparent; animation: spin .8s linear infinite; }
+  .steps li.done .dot { background: var(--accent); border-color: var(--accent); }
   .steps li.done .dot::before { content: "\2713"; }
-  .steps li.soft { color: var(--text); }
-  .steps li.soft .dot { background: #e9b949; border-color: #e9b949; }
+  .steps li.soft .dot { background: var(--amber); border-color: var(--amber); }
   .steps li.soft .dot::before { content: "!"; }
   .steps li.fail { color: var(--bad); }
   .steps li.fail .dot { background: var(--bad); border-color: var(--bad); }
@@ -248,140 +254,113 @@
   .steps .hint { display: block; font-size: 12px; color: var(--dim); }
 
   .notice {
-    text-align: left; font-size: 13px; background: #fff8ea; border: 1px solid #f1dcae;
-    border-radius: 12px; padding: 12px 14px; margin: 16px 0 0; color: #5b4300;
+    text-align: left; font-size: 13px; border: 1px solid var(--warn); border-left-width: 3px;
+    border-radius: 10px; padding: 12px 14px; margin: 16px 0 0;
   }
-  .home-foot { margin: 20px 0 0; font-size: 12.5px; opacity: .85; }
+  .home-foot { margin: 22px 0 0; font-size: 12.5px; color: var(--dim); }
 
   /* =================================================================== */
   /*  Platform                                                            */
   /* =================================================================== */
-  #platform { animation: rise .45s ease both; }
-  header {
-    position: relative; overflow: hidden;
-    background: var(--grad); color: #fff; padding: 18px 24px 0;
-  }
-  header::before {
-    content: ""; position: absolute; width: 420px; height: 420px; right: -120px; top: -220px;
-    border-radius: 50%; background: rgba(255,255,255,.12); pointer-events: none;
-  }
-  .top { position: relative; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .top .mark {
-    flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center;
-    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35);
-  }
-  header h1 { font-size: 20px; margin: 0; letter-spacing: -0.015em; font-weight: 680; }
-  header .tagline {
-    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; opacity: .85; margin-top: 1px;
-  }
-  .patient {
-    margin-left: auto; text-align: right; font-size: 12.5px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .patient .who { opacity: .9; }
-  .patient b { display: block; font-size: 14px; font-weight: 640; opacity: 1; }
-  button.ghost {
-    color: #fff; border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.1);
-    padding: 6px 12px; font-size: 12.5px; white-space: nowrap;
-  }
-  button.ghost:hover:not(:disabled) { color: var(--accent); background: #fff; border-color: #fff; }
+  #platform { animation: rise .4s ease both; }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); padding-top: 20px; }
+  .top { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .top .word { font-size: 22px; }
+  .top .tagline { margin-top: 7px; font-size: 10px; }
+  .patient { margin-left: auto; display: flex; align-items: center; gap: 16px; text-align: right; }
+  .patient b { display: block; font-size: 14px; font-weight: 620; }
+  .patient .mono { font-size: 12px; color: var(--dim); }
 
-  .vitals { position: relative; display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 0; }
+  .vitals { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
   .vital {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
-    padding: 5px 11px 5px 9px; border-radius: 999px;
-    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); color: #fff;
+    padding: 4px 11px 4px 9px; border-radius: 6px;
+    border: 1px solid var(--line); color: var(--dim);
     display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
   }
-  .vital::before {
-    content: ""; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.6);
-  }
-  .vital.on { background: #fff; color: var(--ok); border-color: #fff; }
-  .vital.on::before { background: var(--ok); box-shadow: 0 0 0 3px rgba(13,138,85,.18); }
-  .vital.off { background: rgba(255,255,255,.92); color: var(--bad); border-color: #fff; }
-  .vital.off::before { background: var(--bad); }
+  .vital::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .75; }
+  .vital.on  { color: var(--ok);  border-color: var(--ok);  background: var(--accent-weak); }
+  .vital.off { color: var(--bad); border-color: var(--bad); }
 
-  /* The ECG strip along the bottom of the header. */
-  .ecg { position: relative; display: block; width: 100%; height: 28px; margin-top: 12px; }
+  .ecg { display: block; width: 100%; height: 26px; margin-top: 10px; }
   .ecg path {
-    fill: none; stroke: #fff; stroke-width: 1.6;
-    stroke-linecap: round; stroke-linejoin: round;
-    stroke-dasharray: 1400; stroke-dashoffset: 0;
-    animation: sweepline 9s linear infinite; opacity: 0.6;
+    fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1400; stroke-dashoffset: 0; animation: sweepline 9s linear infinite; opacity: 0.55;
   }
   body.busy .ecg path { animation-duration: 1.6s; opacity: 1; }
   @keyframes sweepline { from { stroke-dashoffset: 1400; } to { stroke-dashoffset: 0; } }
 
-  main {
-    padding: 22px 24px 28px; display: grid; gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    align-items: start;
+  #perm, #asleep {
+    margin-bottom: 20px; padding: 14px 16px; border-radius: 10px;
+    border: 1px solid var(--warn); border-left-width: 3px;
+    background: var(--panel); font-size: 13.5px; display: none;
   }
+  #asleep { border-color: var(--rule); border-left-color: var(--accent); }
+  #perm p, #asleep p { margin: 0 0 8px; }
+  #perm p:last-child, #asleep p:last-child { margin: 0; }
+
+  main.wrap { padding-top: 28px; padding-bottom: 8px; }
+  .grow { flex: 1; min-height: 18px; }
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   section {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 16px; padding: 18px 18px 18px; box-shadow: var(--shadow);
-    position: relative; overflow: hidden;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 22px 22px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
   }
-  section::before {
-    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
-    background: var(--rule);
-  }
-  section.treat::before { background: var(--grad); }
+  section.treat { border-top: 3px solid var(--accent); }
   .kicker {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 3px; font-weight: 600;
+    color: var(--accent); margin-bottom: 4px; font-weight: 600;
   }
   section h2 {
-    font-size: 16px; margin: 0 0 5px; font-weight: 660;
+    font-size: 16.5px; margin: 0 0 6px; font-weight: 650;
     display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   }
-  .note { color: var(--dim); font-size: 12.5px; margin: 0 0 14px; }
+  .note { color: var(--dim); font-size: 13px; margin: 0 0 18px; }
+  .foot { margin-top: auto; }
   .badge {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
-    padding: 3px 8px; border-radius: 999px;
-    background: #fff4dc; color: var(--warn); font-weight: 600;
+    padding: 2px 7px; border-radius: 4px; border: 1px solid var(--warn); color: var(--warn); font-weight: 600;
   }
-  .badge.ready { background: var(--accent-weak); color: var(--ok); }
+  .badge.ready { border-color: var(--ok); color: var(--ok); }
 
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .row + .row { margin-top: 8px; }
+  .row.sep { padding-top: 18px; border-top: 1px solid var(--line); }
 
+  .channels { display: grid; gap: 0; margin-bottom: 4px; }
   .channel {
-    display: flex; align-items: center; gap: 9px;
-    padding: 8px 0; border-bottom: 1px dashed var(--line);
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
   }
-  .channel:last-of-type { border-bottom: 0; }
-  .channel .name { flex: 1; font-size: 13.5px; font-weight: 580; }
+  .channel:first-child { border-top: 1px solid var(--line); }
+  .channel .name { font-size: 14px; font-weight: 580; display: flex; align-items: baseline; gap: 10px; }
   .channel .how {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 10.5px; color: var(--dim); letter-spacing: 0.03em;
+    font-size: 10.5px; color: var(--dim); letter-spacing: 0.03em; font-weight: 400;
   }
-  .channel button { padding: 5px 11px; font-size: 12.5px; }
+  .channel button { padding: 6px 12px; font-size: 12.5px; min-width: 64px; }
+  .small { font-size: 12px; color: var(--dim); margin: 14px 0 0; }
 
   #logwrap {
-    grid-column: 1 / -1; background: var(--panel);
-    border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
-    overflow: hidden;
+    margin-top: 20px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
   }
-  #logbar {
-    display: flex; align-items: center; gap: 11px;
-    padding: 11px 15px; border-bottom: 1px solid var(--line);
-  }
+  #logbar { display: flex; align-items: center; gap: 11px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
   #logbar h2 { margin: 0; font-size: 14px; }
   #running {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--accent); display: none;
+    font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); display: none;
   }
   #running.on { display: inline-flex; align-items: center; gap: 7px; }
   #running.on::before {
     content: ""; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--teal); animation: beat 1.1s ease-in-out infinite;
+    background: var(--accent); animation: beat 1.1s ease-in-out infinite;
   }
-  @keyframes beat { 0%,100% { opacity: 1; transform: scale(1); }
-                    50% { opacity: .35; transform: scale(.7); } }
+  @keyframes beat { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
   .bar-actions { margin-left: auto; display: flex; gap: 8px; }
   .bar-actions button { padding: 4px 11px; font-size: 12.5px; }
   /* Only offered while something is running, and never disabled with the rest,
@@ -392,15 +371,14 @@
   .screen { position: relative; background: var(--screen); }
   .screen::after {
     content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(
-      to bottom, rgba(255,255,255,.028) 0 1px, transparent 1px 3px);
+    background: repeating-linear-gradient(to bottom, rgba(255,255,255,.028) 0 1px, transparent 1px 3px);
     box-shadow: inset 0 0 70px rgba(0,0,0,.55);
   }
   pre {
-    margin: 0; padding: 15px 16px; height: 350px; overflow: auto;
+    margin: 0; padding: 16px 18px; height: 340px; overflow: auto;
     font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
     white-space: pre-wrap; word-break: break-word;
-    color: var(--phosphor); text-shadow: 0 0 6px rgba(127,232,214,.18);
+    color: var(--phosphor); text-shadow: 0 0 6px rgba(116,224,204,.18);
   }
   .l-ok { color: var(--s-ok); }
   .l-warn { color: var(--s-warn); }
@@ -408,24 +386,19 @@
   .l-cmd { color: #ffffff; font-weight: 600; }
   .l-head { color: #ffffff; font-weight: 700; }
 
-  #perm, #asleep {
-    margin: 18px 24px 0; padding: 14px 16px; border-radius: 12px;
-    border: 1px solid #f1dcae; border-left: 4px solid #e9b949;
-    background: #fffaf0; font-size: 13.5px; display: none;
+  footer.wrap { padding-top: 14px; padding-bottom: 32px; color: var(--dim); font-size: 12px; }
+
+  @media (max-width: 860px) {
+    .cards { grid-template-columns: minmax(0, 1fr); }
   }
-  #asleep { border-color: var(--line); border-left-color: var(--teal); background: var(--panel); }
-  #perm p, #asleep p { margin: 0 0 8px; }
-  #perm p:last-child, #asleep p:last-child { margin: 0; }
-
-  footer { padding: 2px 24px 26px; color: var(--dim); font-size: 12px; }
-
   @media (max-width: 620px) {
-    .stage { padding: 24px 18px 20px; border-radius: 18px; }
-    .brand h1 { font-size: 28px; }
+    .wrap { padding: 0 16px; }
+    .stage { padding: 24px 18px 20px; }
+    .brand .word { font-size: 34px; }
     .wire { width: 70px; }
     .patient { margin-left: 0; text-align: left; width: 100%; justify-content: space-between; }
-    header, main, footer { padding-left: 16px; padding-right: 16px; }
-    #perm, #asleep { margin-left: 16px; margin-right: 16px; }
+    .channel { grid-template-columns: 1fr auto auto; }
+    .channel .name { flex-direction: column; gap: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
@@ -459,12 +432,9 @@
 <!--  Home: find the TV, pick it, connect                              -->
 <!-- ================================================================ -->
 <div id="home">
-  <div class="glow a"></div><div class="glow b"></div><div class="glow c"></div>
-
   <div class="home-inner">
     <div class="brand">
-      <div class="mark"><svg width="34" height="30"><use href="#i-tv"/></svg></div>
-      <h1>TV Doctor</h1>
+      <h1 class="word" aria-label="TV Doctor">TV<span class="sp"></span>D<svg class="scope" viewBox="-60 -60 120 120" aria-hidden="true"></svg>CTOR</h1>
       <div class="tagline">house calls for your television</div>
     </div>
 
@@ -598,124 +568,131 @@
 <!-- ================================================================ -->
 <div id="platform" hidden>
 <header>
-  <div class="top">
-    <div class="mark"><svg width="26" height="23"><use href="#i-tv"/></svg></div>
-    <div>
-      <h1>TV Doctor</h1>
-      <div class="tagline">house calls for your television</div>
-    </div>
-    <div class="patient">
-      <div class="who">
-        <b id="tvline">Admitting patient</b>
-        <span class="mono" id="tvsub">reading vital signs</span>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1 class="word" aria-label="TV Doctor">TV<span class="sp"></span>D<svg class="scope" viewBox="-60 -60 120 120" aria-hidden="true"></svg>CTOR</h1>
+        <div class="tagline">house calls for your television</div>
       </div>
-      <button class="ghost" id="change">Change TV</button>
+      <div class="patient">
+        <div>
+          <b id="tvline">Admitting patient</b>
+          <span class="mono" id="tvsub">reading vital signs</span>
+        </div>
+        <button id="change">Change TV</button>
+      </div>
     </div>
-  </div>
 
-  <div class="vitals">
-    <span class="vital" id="chip-awake">tv</span>
-    <span class="vital" id="chip-adb">adb</span>
-  </div>
+    <div class="vitals">
+      <span class="vital" id="chip-awake">tv</span>
+      <span class="vital" id="chip-adb">adb</span>
+    </div>
 
-  <svg class="ecg" viewBox="0 0 1400 26" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0 13h120l12-9 10 18 11-9h150l14-11 9 22 10-11h180l13-9 10 18 11-9h150
-             l14-11 9 22 10-11h180l13-9 10 18 11-9h190l14-11 9 22 10-11h160"/>
-  </svg>
+    <svg class="ecg" viewBox="0 0 1400 26" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 13h120l12-9 10 18 11-9h150l14-11 9 22 10-11h180l13-9 10 18 11-9h150
+               l14-11 9 22 10-11h180l13-9 10 18 11-9h190l14-11 9 22 10-11h160"/>
+    </svg>
+  </div>
 </header>
 
-<div id="perm">
-  <p><strong>macOS is stopping TV Doctor from reaching your television.</strong>
-  TV Doctor cannot see your router either, so this is a permission, not the set.
-  Apps opened from Finder need permission to find devices on your network.</p>
-  <p>Open <strong>System Settings, Privacy &amp; Security, Local Network</strong>
-  and switch on <strong>TV Doctor</strong>, then run Examine again. If TV Doctor
-  is not listed, quit and open it once more, then allow the prompt. Rebuilding
-  with scripts/build.sh gives the app a new signature, so macOS may ask again.</p>
-</div>
+<main class="wrap">
+  <div id="perm">
+    <p><strong>macOS is stopping TV Doctor from reaching your television.</strong>
+    TV Doctor cannot see your router either, so this is a permission, not the set.
+    Apps opened from Finder need permission to find devices on your network.</p>
+    <p>Open <strong>System Settings, Privacy &amp; Security, Local Network</strong>
+    and switch on <strong>TV Doctor</strong>, then run Examine again. If TV Doctor
+    is not listed, quit and open it once more, then allow the prompt. Rebuilding
+    with scripts/build.sh gives the app a new signature, so macOS may ask again.</p>
+  </div>
 
-<div id="asleep">
-  <p><strong>The television is not answering.</strong> The network is fine from
-  here, so the set is most likely in standby. Wake it with the remote, then run
-  Examine again.</p>
-</div>
+  <div id="asleep">
+    <p><strong>The television is not answering.</strong> The network is fine from
+    here, so the set is most likely in standby. Wake it with the remote, then run
+    Examine again.</p>
+  </div>
 
-<main>
-  <section>
-    <div class="kicker">examination</div>
-    <h2>Check the patient over</h2>
-    <p class="note">Looks only, changes nothing. Works whether or not ADB is
-      reachable.</p>
-    <div class="row">
-      <button class="primary" data-cmd="remote-check">Examine</button>
-      <button data-cmd="status">Vital signs</button>
-      <button data-cmd="routes">Check the channels</button>
-    </div>
-  </section>
+  <div class="cards">
+    <section>
+      <div class="kicker">examination</div>
+      <h2>Check the patient over</h2>
+      <p class="note">Looks only, changes nothing. Works whether or not ADB is reachable.</p>
+      <div class="row foot">
+        <button class="primary" data-cmd="remote-check">Examine</button>
+        <button data-cmd="status">Vital signs</button>
+        <button data-cmd="routes">Check the channels</button>
+      </div>
+    </section>
 
-  <section>
-    <div class="kicker">channel control</div>
-    <h2>Start and stop apps</h2>
-    <p class="note">Stopping an app hands back the memory it was holding, which
-      is the quickest relief available without ADB.</p>
-    <div class="channel">
-      <span class="name">YouTube</span><span class="how">cast</span>
-      <button data-cmd="launch-youtube">Start</button>
-      <button data-cmd="stop-youtube">Stop</button>
-    </div>
-    <div class="channel">
-      <span class="name">Netflix</span><span class="how">dial</span>
-      <button data-cmd="launch-netflix">Start</button>
-      <button data-cmd="stop-netflix">Stop</button>
-    </div>
-    <div class="channel">
-      <span class="name">Spotify</span><span class="how">cast</span>
-      <button data-cmd="launch-spotify">Start</button>
-      <button data-cmd="stop-spotify">Stop</button>
-    </div>
-    <div class="channel">
-      <span class="name">DStv</span><span class="how">no receiver</span>
-      <button data-cmd="launch-dstv">Try anyway</button>
-      <button data-cmd="force-stop-dstv">Force stop</button>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <button data-cmd="force-stop">Back to the home screen</button>
-    </div>
-    <p class="note" style="margin:10px 0 0">DStv answers neither protocol, so a
-      force stop takes the screen with an app that does and then ends it. That
-      drops DStv out of the foreground so Android can reclaim its memory. A true
-      force stop needs ADB.</p>
-  </section>
+    <section>
+      <div class="kicker">home care</div>
+      <h2>What to do with the remote</h2>
+      <p class="note">When ADB is not reachable, the treatment cannot run over the
+        network. This is the same job, step by step with the remote, in the order
+        that matters.</p>
+      <div class="row foot">
+        <button class="primary" data-cmd="guide">Read the instructions</button>
+      </div>
+    </section>
 
-  <section class="treat">
-    <div class="kicker">treatment</div>
-    <h2>Clean and speed up <span class="badge" id="adb-badge">needs adb</span></h2>
-    <p class="note">The real course of treatment. These drive the television
-      directly, so they only run while ADB is reachable.</p>
-    <div class="row">
-      <button class="primary" data-cmd="report">Full diagnosis</button>
-      <button data-cmd="clean">Clean</button>
-      <button data-cmd="optimize">Optimise</button>
-      <button data-cmd="bloat">Installed apps</button>
-      <button data-cmd="bloat-auto">Switch off extras</button>
-      <button data-cmd="update">Updates</button>
-      <button data-cmd="apps">App notes</button>
-      <button data-cmd="full">Whole course</button>
-      <button class="danger" data-cmd="reboot">Restart the set</button>
-      <button class="danger" data-cmd="restore">Undo my changes</button>
-    </div>
-  </section>
+    <section>
+      <div class="kicker">channel control</div>
+      <h2>Start and stop apps</h2>
+      <p class="note">Stopping an app hands back the memory it was holding, the
+        quickest relief available without ADB.</p>
+      <div class="channels">
+        <div class="channel">
+          <span class="name">YouTube <span class="how">cast</span></span>
+          <button data-cmd="launch-youtube">Start</button>
+          <button data-cmd="stop-youtube">Stop</button>
+        </div>
+        <div class="channel">
+          <span class="name">Netflix <span class="how">dial</span></span>
+          <button data-cmd="launch-netflix">Start</button>
+          <button data-cmd="stop-netflix">Stop</button>
+        </div>
+        <div class="channel">
+          <span class="name">Spotify <span class="how">cast</span></span>
+          <button data-cmd="launch-spotify">Start</button>
+          <button data-cmd="stop-spotify">Stop</button>
+        </div>
+        <div class="channel">
+          <span class="name">DStv <span class="how">no receiver</span></span>
+          <button data-cmd="launch-dstv">Try</button>
+          <button data-cmd="force-stop-dstv">Force stop</button>
+        </div>
+      </div>
+      <div class="row foot" style="padding-top:16px">
+        <button data-cmd="force-stop">Back to the home screen</button>
+      </div>
+      <p class="small">DStv answers neither protocol, so Force stop takes the screen
+        with an app that does, then ends it. A true force stop needs ADB.</p>
+    </section>
 
-  <section>
-    <div class="kicker">home care</div>
-    <h2>What to do with the remote</h2>
-    <p class="note">When ADB is not reachable, the treatment above cannot run
-      over the network. Here is the same job, step by step with the remote, in
-      the order that matters.</p>
-    <div class="row">
-      <button class="primary" data-cmd="guide">Read the instructions</button>
-    </div>
-  </section>
+    <section class="treat">
+      <div class="kicker">treatment</div>
+      <h2>Clean and speed up <span class="badge" id="adb-badge">needs adb</span></h2>
+      <p class="note">The real course of treatment. These drive the television
+        directly, so they only run while ADB is reachable.</p>
+      <div class="row">
+        <button class="primary" data-cmd="report">Full diagnosis</button>
+        <button data-cmd="full">Whole course</button>
+      </div>
+      <div class="row">
+        <button data-cmd="clean">Clean</button>
+        <button data-cmd="optimize">Optimise</button>
+        <button data-cmd="bloat">Installed apps</button>
+        <button data-cmd="bloat-auto">Switch off extras</button>
+        <button data-cmd="update">Updates</button>
+        <button data-cmd="apps">App notes</button>
+      </div>
+      <div class="grow"></div>
+      <div class="row sep">
+        <button class="danger" data-cmd="reboot">Restart the set</button>
+        <button class="danger" data-cmd="restore">Undo my changes</button>
+      </div>
+    </section>
+  </div>
 
   <div id="logwrap">
     <div id="logbar">
@@ -732,7 +709,7 @@ the output appears here, exactly as the command printed it.</pre></div>
   </div>
 </main>
 
-<footer>
+<footer class="wrap">
   Every button runs the same tvdoctor command you could type yourself, and shows
   you what it printed. Nothing is hidden and nothing is summarised.
 </footer>
@@ -740,6 +717,67 @@ the output appears here, exactly as the command printed it.</pre></div>
 
 <script>
   function $(id) { return document.getElementById(id); }
+
+  // ================================================================
+  //  The mark
+  // ================================================================
+  // 24 segments: the last quarter stands for ADB, so a TV that answers
+  // without it shows three quarters lit and the rest breathing amber.
+  var SEGS = 24, ADB_FROM = 18;
+
+  function segPath(i, n, r1, r2, gap) {
+    var a0 = (i / n * 360 + gap / 2 - 90) * Math.PI / 180;
+    var a1 = ((i + 1) / n * 360 - gap / 2 - 90) * Math.PI / 180;
+    function p(r, a) { return (r * Math.cos(a)).toFixed(2) + ',' + (r * Math.sin(a)).toFixed(2); }
+    return 'M' + p(r1, a0) + ' L' + p(r2, a0) + ' A' + r2 + ',' + r2 + ' 0 0 1 ' + p(r2, a1) +
+           ' L' + p(r1, a1) + ' A' + r1 + ',' + r1 + ' 0 0 0 ' + p(r1, a0) + ' Z';
+  }
+
+  var ECG = 'M-21 2h8l4-9 5 17 5-22 4 14h20';
+
+  function scopeSVG(uid) {
+    var s = '<defs><filter id="' + uid + 'g" x="-50%" y="-50%" width="200%" height="200%">' +
+      '<feGaussianBlur stdDeviation="2.4"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+    s += '<circle class="sc-ring" r="57"/><circle class="sc-ring thin" r="31"/>';
+    s += '<g filter="url(#' + uid + 'g)">';
+    for (var i = 0; i < SEGS; i++) {
+      s += '<path class="sc-seg' + (i >= ADB_FROM ? ' adb' : '') + '" style="--i:' + i + '" d="' +
+           segPath(i, SEGS, 37, 51, 3.4) + '"/>';
+    }
+    s += '</g>';
+    s += '<g class="sc-spin"><circle r="25"/></g>';
+    s += '<circle class="sc-glow" r="30"/>';
+    s += '<path class="sc-ecg" pathLength="100" filter="url(#' + uid + 'g)" d="' + ECG + '"/>';
+    return s;
+  }
+
+  document.querySelectorAll('svg.scope').forEach(function (svg, n) {
+    svg.innerHTML = scopeSVG('sc' + n);
+    svg.setAttribute('data-state', 'idle');
+  });
+
+  // The tab icon follows the mark, drawn flat since favicons do not animate.
+  function faviconFor(state) {
+    var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-64 -64 128 128">' +
+      '<rect x="-64" y="-64" width="128" height="128" rx="30" fill="#0b8f88"/>' +
+      '<circle r="52" fill="none" stroke="#fff" stroke-width="7"/>';
+    for (var i = 0; i < 12; i++) {
+      var lit = state === 'link' || (state === 'noadb' && i < 9);
+      var amber = state === 'noadb' && i >= 9;
+      s += '<path d="' + segPath(i, 12, 26, 42, 8) + '" fill="' + (amber ? '#f2c65c' : '#fff') +
+           '" fill-opacity="' + (lit || amber ? 1 : state === 'down' ? .2 : .35) + '"/>';
+    }
+    s += '</svg>';
+    $('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(s);
+  }
+
+  function setScope(state) {
+    document.querySelectorAll('svg.scope').forEach(function (svg) {
+      if (svg.getAttribute('data-state') !== state) svg.setAttribute('data-state', state);
+    });
+    faviconFor(state);
+  }
+  faviconFor('idle');
   function json(r) { return r.json(); }
   function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
 
@@ -781,6 +819,7 @@ the output appears here, exactly as the command printed it.</pre></div>
       if (data.running) { enterPlatform(); return; }
       renderIdle(data.tv);
       show('idle');
+      setScope('idle');
       // The first probe of a remembered TV lands a few seconds after launch;
       // keep the welcome card's name up to date until then.
       clearInterval(homeTimer);
@@ -793,6 +832,7 @@ the output appears here, exactly as the command printed it.</pre></div>
 
   function scan() {
     show('scanning');
+    setScope('scan');
     $('scan-sub').textContent = 'Searching your network';
     var started = Date.now();
     fetch('/api/scan', { method: 'POST' }).then(json).then(function (s) {
@@ -821,6 +861,7 @@ the output appears here, exactly as the command printed it.</pre></div>
       $('none-subnet').textContent = s.subnet ? s.subnet + '.0/24' : 'your network';
       $('none-perm').hidden = s.lan !== false;
       show('none');
+      setScope('down');
       return;
     }
     // Android TVs first: the remote port is the giveaway.
@@ -861,6 +902,7 @@ the output appears here, exactly as the command printed it.</pre></div>
     $('res-title').textContent = n === 1 ? 'Found your TV' : 'Found ' + n + ' devices';
     $('res-sub').textContent = n === 1 ? 'Is this the one?' : 'Choose the one you want to look after.';
     show('results');
+    setScope('idle');
   }
 
   function setStep(id, state, hint) {
@@ -872,6 +914,7 @@ the output appears here, exactly as the command printed it.</pre></div>
   function connect(tv) {
     chosen = tv;
     show('connecting');
+    setScope('scan');
     $('con-title').textContent = 'Connecting to ' + (tv.name || tv.model || 'your TV');
     $('con-sub').textContent = tv.ip;
     $('con-fail').hidden = true;
@@ -903,6 +946,7 @@ the output appears here, exactly as the command printed it.</pre></div>
           setStep('st-adb', t.adb ? 'done' : 'soft',
             t.adb ? 'Full treatment available' : 'Off, so remote tools and the guide only');
           $('stage').classList.add('ok');
+          setScope(t.adb ? 'link' : 'noadb');
           $('con-title').textContent = 'Connected';
           return wait(900);
         }).then(enterPlatform);
@@ -913,6 +957,7 @@ the output appears here, exactly as the command printed it.</pre></div>
   function failed(message, blocked) {
     setStep('st-reach', 'fail', message);
     $('stage').classList.add('fail');
+    setScope('down');
     $('con-title').textContent = 'Could not connect';
     $('con-perm').hidden = !blocked;
     $('con-fail').hidden = false;
@@ -1012,6 +1057,8 @@ the output appears here, exactly as the command printed it.</pre></div>
     fetch('/api/state').then(json)
       .then(function (data) {
         var tv = data.tv;
+        if ($('platform').hidden) return;
+        setScope(tv.awake ? (tv.adb ? 'link' : 'noadb') : tv.down ? 'down' : 'scan');
         $('tvline').textContent = tv.ip ? (tv.model || 'Television') : 'No patient yet';
         $('tvsub').textContent = tv.ip
           ? (tv.name ? '"' + tv.name + '", ' + tv.ip : tv.ip)
