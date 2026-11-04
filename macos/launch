@@ -6,9 +6,12 @@
 # bundle does not get the bundle's identity, so it is blocked with no prompt.
 set -e
 
-here=$(cd "$(dirname "$0")" && pwd)          # TV Doctor.app/Contents/MacOS
+here=$(cd "$(dirname "$0")" && pwd)          # dist/TV Doctor.app/Contents/MacOS
 inner="$here/tvdoctor"
-project=$(cd "$here/../../.." 2>/dev/null && pwd || echo "")
+# The project folder, when the app is still in dist/. Empty once it has been
+# moved elsewhere, such as /Applications, and then only the inner copy is used.
+project=$(cd "$here/../../../.." 2>/dev/null && pwd || echo "")
+[ -f "$project/Cargo.toml" ] || project=""
 built="$project/target/release/tvdoctor"
 
 # adb and openssl come from Homebrew, which is not on Finder's PATH.
@@ -40,11 +43,11 @@ fi
 if [ ! -x "$inner" ]; then
     if command -v cargo >/dev/null 2>&1 && [ -f "$project/Cargo.toml" ]; then
         osascript -e 'display notification "Building TV Doctor, one moment." with title "TV Doctor"' >/dev/null 2>&1
-        ( cd "$project" && cargo build --release ) || fail "Could not build. In Terminal, run: cargo build --release"
+        ( cd "$project" && cargo build --release ) || fail "Could not build. In Terminal, run: ./scripts/build.sh"
         cp -f "$built" "$inner" || fail "Built, but could not copy the binary into the app."
         resign
     else
-        fail "TV Doctor is not built yet. In Terminal, run: cargo build --release"
+        fail "TV Doctor is not built yet. In Terminal, run: ./scripts/build.sh"
     fi
 fi
 

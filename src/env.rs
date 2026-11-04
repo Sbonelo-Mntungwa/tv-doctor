@@ -23,18 +23,15 @@ use std::path::PathBuf;
 fn candidates() -> Vec<PathBuf> {
     let mut out = vec![PathBuf::from(".env")];
     if let Ok(exe) = std::env::current_exe() {
-        // target/release/tvdoctor -> project, and
-        // TV Doctor.app/Contents/MacOS/tvdoctor -> project.
-        for up in [2usize, 3, 4] {
-            let mut dir = exe.clone();
-            let mut ok = true;
-            for _ in 0..up {
-                ok &= dir.pop();
-            }
-            if ok && dir.join("Cargo.toml").is_file() {
-                out.push(dir.join(".env"));
-                break;
-            }
+        // Walk up from target/release/tvdoctor or
+        // dist/TV Doctor.app/Contents/MacOS/tvdoctor to the project folder.
+        if let Some(project) = exe
+            .ancestors()
+            .skip(1)
+            .take(5)
+            .find(|dir| dir.join("Cargo.toml").is_file())
+        {
+            out.push(project.join(".env"));
         }
     }
     out.push(crate::config::config_dir().join(".env"));
