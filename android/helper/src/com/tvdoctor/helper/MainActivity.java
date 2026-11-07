@@ -2,6 +2,8 @@ package com.tvdoctor.helper;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -14,6 +16,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.ByteArrayOutputStream;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -24,6 +30,9 @@ import java.util.Collections;
  * permissions worth granting, each with a button to its Settings page.
  */
 public class MainActivity extends Activity {
+    /** The screen while it is in front, for /screen. */
+    private static volatile MainActivity shown;
+
     private static final String BG = "#081215";
     private static final String TEXT = "#DFEFF0";
     private static final String DIM = "#87A2A9";
@@ -126,10 +135,12 @@ public class MainActivity extends Activity {
         super.onResume();
         ticker.removeCallbacks(tick);
         ticker.post(tick);
+        shown = this;
     }
 
     @Override
     protected void onPause() {
+        if (shown == this) shown = null;
         ticker.removeCallbacks(tick);
         super.onPause();
     }
@@ -154,6 +165,53 @@ public class MainActivity extends Activity {
             note.setText("Find TV Nurse on each page and allow it. Both are also under "
                     + "Settings > Apps > Special app access.");
         }
+    }
+
+    /**
+     * TV Nurse's own screen as a PNG, for documentation. An app can draw its
+     * own window and nothing else, so this never sees other apps. With
+     * redact, the code is hidden and the address replaced while it draws.
+     * Null when TV Nurse is not the app in front.
+     */
+    static byte[] capture(final boolean redact, final String fakeAddress) {
+        final MainActivity activity = shown;
+        if (activity == null) return null;
+        final byte[][] result = new byte[1][];
+        final CountDownLatch done = new CountDownLatch(1);
+        activity.runOnUiThread(new Runnable() {
+            @Override public void run() {
+                try {
+                    CharSequence realCode = activity.code.getText();
+                    CharSequence realAddress = activity.address.getText();
+                    if (redact) {
+                        activity.code.setText("\u2022\u2022\u2022 \u2022\u2022\u2022");
+                        activity.address.setText("TV Doctor finds me at " + fakeAddress + ":" + Server.PORT);
+                    }
+                    View root = activity.getWindow().getDecorView();
+                    root.measure(View.MeasureSpec.makeMeasureSpec(root.getWidth(), View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(root.getHeight(), View.MeasureSpec.EXACTLY));
+                    root.layout(0, 0, root.getWidth(), root.getHeight());
+                    Bitmap bitmap = Bitmap.createBitmap(root.getWidth(), root.getHeight(), Bitmap.Config.ARGB_8888);
+                    root.draw(new Canvas(bitmap));
+                    if (redact) {
+                        activity.code.setText(realCode);
+                        activity.address.setText(realAddress);
+                    }
+                    ByteArrayOutputStream png = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, png);
+                    bitmap.recycle();
+                    result[0] = png.toByteArray();
+                } catch (Exception ignored) {
+                    // Leave the result empty.
+                } finally {
+                    done.countDown();
+                }
+            }
+        });
+        try {
+            done.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {}
+        return result[0];
     }
 
     private void mark(TextView view, boolean on, String title, String why) {

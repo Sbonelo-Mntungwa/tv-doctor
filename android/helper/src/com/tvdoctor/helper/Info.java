@@ -24,8 +24,8 @@ import java.util.Map;
 
 /** What TV Nurse can tell TV Doctor about the TV, read without ADB. */
 final class Info {
-    static final String VERSION = "0.4.1";
-    static final int VERSION_CODE = 6;
+    static final String VERSION = "0.5.0";
+    static final int VERSION_CODE = 7;
 
     /** How far back "last used" looks. */
     private static final long USAGE_WINDOW_MS = 180L * 24 * 60 * 60 * 1000;
