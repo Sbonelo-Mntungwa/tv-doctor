@@ -1128,6 +1128,11 @@ pub fn launch_app(opts: &Opts) -> Result<(), String> {
     };
     let label = canonical(&wanted);
 
+    // TV Nurse can open any installed app, DStv included.
+    if let Some(nurse) = crate::nurse::Nurse::reach(&ip, 4000) {
+        return crate::nurse::open_app(&nurse, &label);
+    }
+
     hdr(&format!("Launching {}", label));
     match route_for(&ip, &label) {
         Route::Dial(name) => {
@@ -1169,6 +1174,10 @@ pub fn stop_app(opts: &Opts) -> Result<(), String> {
         return Err("name an app, e.g.  tvdoctor stop youtube".to_string());
     };
     let label = canonical(&wanted);
+
+    if let Some(nurse) = crate::nurse::Nurse::reach(&ip, 4000) {
+        return crate::nurse::close_app(&nurse, &label);
+    }
 
     hdr(&format!("Stopping {}", label));
     match route_for(&ip, &label) {

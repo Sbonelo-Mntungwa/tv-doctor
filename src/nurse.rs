@@ -1097,6 +1097,63 @@ fn hold_power(ip: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// One of the four main apps by name (DStv, YouTube, Netflix, Spotify), or a
+/// package name as it is.
+fn resolve_app(nurse: &Nurse, wanted: &str) -> Result<(String, String), String> {
+    if wanted.contains('.') {
+        return Ok((wanted.to_string(), wanted.to_string()));
+    }
+    let (_, apps) = nurse.apps()?;
+    key_apps(&apps)
+        .into_iter()
+        .find(|(label, _)| label.eq_ignore_ascii_case(wanted))
+        .and_then(|(label, app)| app.map(|a| (label.to_string(), a.package)))
+        .ok_or(format!("{} is not installed on this TV", wanted))
+}
+
+/// Open an app through TV Nurse, which can start anything installed, DStv
+/// included. Cast and DIAL never could.
+pub fn open_app(nurse: &Nurse, wanted: &str) -> Result<(), String> {
+    let (label, pkg) = resolve_app(nurse, wanted)?;
+    hdr(&format!("Opening {}", label));
+    kv("Route", "TV Nurse");
+    if config::dry_run() {
+        ui::dry(&format!("would open {}", pkg));
+        return Ok(());
+    }
+    nurse.launch(&pkg)?;
+    ok(&format!("{} is starting on the TV", label));
+    println!();
+    Ok(())
+}
+
+/// Close an app. No ordinary app may force-stop the one on screen, so the TV
+/// goes Home first, which sends the app to the background, and then TV Nurse
+/// closes what is in the background, the app included.
+pub fn close_app(nurse: &Nurse, wanted: &str) -> Result<(), String> {
+    let (label, _) = resolve_app(nurse, wanted)?;
+    hdr(&format!("Closing {}", label));
+    kv("Route", "Home, then TV Nurse closes the background");
+    if config::dry_run() {
+        ui::dry("would go Home and close the background apps");
+        return Ok(());
+    }
+    if remote::is_paired(&nurse.ip) {
+        press_home(&nurse.ip);
+    } else {
+        // No remote: the launcher is an app like any other.
+        let _ = nurse.launch("com.google.android.tvlauncher");
+    }
+    std::thread::sleep(Duration::from_millis(1200));
+    let (before, after) = nurse.free_memory()?;
+    ok(&format!("{} is closed", label));
+    if after > before {
+        kv("Memory back", &human(after - before));
+    }
+    println!();
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // tvdoctor nurse ...
 // ---------------------------------------------------------------------------
