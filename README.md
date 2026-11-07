@@ -192,6 +192,14 @@ tvdoctor nurse clean             # clear the biggest caches, with you at the rem
 tvdoctor nurse open com.example.app
 ```
 
+For documentation, TV Nurse can draw its own screen to a PNG while it is open
+on the TV. An app can only draw itself, so this never sees other apps. The code
+is hidden and the address replaced unless `redact=0` is passed:
+
+```bash
+curl -H "X-Nurse-Code: CODE" -o tv-nurse.png "http://TV-ADDRESS:8790/screen?address=192.168.1.42"
+```
+
 **The code changes every hour.** When it does, the old one stops working and
 TV Doctor asks for the new one: on the connecting screen, in the TV Nurse
 card, or with `tvdoctor nurse pair`. After five wrong codes in a row TV Nurse

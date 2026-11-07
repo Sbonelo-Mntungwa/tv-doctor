@@ -100,6 +100,7 @@ final class Server {
 
             String body;
             String status = "200 OK";
+            byte[] image = null;
             if (path.equals("/") || path.equals("/status")) {
                 body = Info.status(context, paired);
             } else if (!paired) {
@@ -109,6 +110,13 @@ final class Server {
                         : "wrong or expired code. The current one is on the TV Nurse screen");
             } else if (path.equals("/report")) {
                 body = Info.report(context);
+            } else if (path.equals("/screen")) {
+                // TV Nurse's own screen, for documentation. Redacted unless
+                // asked otherwise; the stand-in address must look like one.
+                String fake = param(query, "address");
+                if (!fake.matches("[0-9]{1,3}(\\.[0-9]{1,3}){3}")) fake = "192.168.1.42";
+                image = MainActivity.capture(!"0".equals(param(query, "redact")), fake);
+                body = image == null ? Actions.error("open TV Nurse on the TV first") : "";
             } else if (!method.equals("POST")) {
                 status = "405 Method Not Allowed";
                 body = Actions.error("use POST");
@@ -133,10 +141,11 @@ final class Server {
                 body = Actions.error("not found");
             }
 
-            byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = image != null ? image : body.getBytes(StandardCharsets.UTF_8);
+            String type = image != null ? "image/png" : "application/json; charset=utf-8";
             OutputStream out = s.getOutputStream();
             out.write(("HTTP/1.1 " + status + "\r\n"
-                    + "Content-Type: application/json; charset=utf-8\r\n"
+                    + "Content-Type: " + type + "\r\n"
                     + "Content-Length: " + bytes.length + "\r\n"
                     + "Cache-Control: no-store\r\n"
                     + "Connection: close\r\n\r\n").getBytes(StandardCharsets.UTF_8));
