@@ -361,6 +361,15 @@
   #rc-pad .digits { margin-top: 0; grid-template-columns: repeat(5, 40px); }
   #rc-pad .digits span { display: none; }
   #rc-pad #rc-status { flex-basis: 100%; margin: 0; }
+  .rc-apps { flex-basis: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+  .rc-app {
+    display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+    border: 1px solid var(--line); border-radius: 10px;
+  }
+  .rc-app span { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; }
+  .rc-app button { padding: 3px 9px; font-size: 12px; }
+  .rc-app span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 640px) { .rc-apps { grid-template-columns: minmax(0, 1fr); } }
   .rc-restart { margin-left: auto; padding: 4px 12px; font-size: 12.5px; font-weight: 500; }
   #nurse-err { color: var(--bad); font-size: 12px; margin: 8px 0 0; }
   #nurse-err:empty { display: none; }
@@ -857,6 +866,12 @@
             <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
             <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
             <span></span><button data-key="0">0</button><span></span>
+          </div>
+          <div class="rc-apps" role="group" aria-label="Apps">
+            <div class="rc-app"><span>DStv</span><button data-cmd="open-dstv">Open</button><button data-cmd="close-dstv">Close</button></div>
+            <div class="rc-app"><span>YouTube</span><button data-cmd="open-youtube">Open</button><button data-cmd="close-youtube">Close</button></div>
+            <div class="rc-app"><span>Netflix</span><button data-cmd="open-netflix">Open</button><button data-cmd="close-netflix">Close</button></div>
+            <div class="rc-app"><span>Spotify</span><button data-cmd="open-spotify">Open</button><button data-cmd="close-spotify">Close</button></div>
           </div>
           <p class="small" id="rc-status"></p>
         </div>

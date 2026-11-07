@@ -218,7 +218,8 @@ tvdoctor optimize         # recompile apps, switch off animations (10-30 min)
 tvdoctor bloat            # list unused preinstalled apps
 tvdoctor reboot --yes     # restart so it all takes effect
 
-tvdoctor launch youtube   # start an app, no ADB needed
+tvdoctor launch dstv      # open an app (through TV Nurse: any app, DStv included)
+tvdoctor stop dstv        # close it: Home, then TV Nurse closes the background
 tvdoctor restore --yes    # undo everything TV Doctor changed
 tvdoctor --help           # every command
 ```
