@@ -345,7 +345,30 @@
   }
   .controls { min-height: 0; overflow: auto; padding: 4px; margin: -4px; display: flex; flex-direction: column; }
   /* The second row stretches, so the cards end level with the monitor. */
-  .cards { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr; gap: 18px; }
+  .cards { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr auto; gap: 18px; }
+  .cards > .treat { grid-column: 1 / -1; }
+  /* Six tasks in two columns, so the page fits one screen. */
+  .treat .tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; align-content: start; }
+  .treat .tasks > .task { border-top: 0; border-bottom: 1px solid var(--line); min-height: 44px; }
+  .head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  button.ghost[aria-pressed="true"] { color: #0b8f88; background: #fff; border-color: #fff; }
+
+  /* The remote sits under Treatment, laid out sideways. */
+  #rc.dock { grid-column: 1 / -1; padding-top: 14px; padding-bottom: 14px; }
+  #rc.dock h2 { margin-bottom: 8px; }
+  #rc-pad:not([hidden]) { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 30px; }
+  #rc-pad .rc-row { margin-top: 0; flex-wrap: nowrap; }
+  #rc-pad .digits { margin-top: 0; grid-template-columns: repeat(5, 40px); }
+  #rc-pad .digits span { display: none; }
+  #rc-pad #rc-status { flex-basis: 100%; margin: 0; }
+  .rc-restart { margin-left: auto; padding: 4px 12px; font-size: 12.5px; font-weight: 500; }
+  #nurse-err { color: var(--bad); font-size: 12px; margin: 8px 0 0; }
+  #nurse-err:empty { display: none; }
+  #nurse .note { margin-bottom: 10px; }
+  .con-code { margin-top: 18px; text-align: center; }
+  .con-code .lede { margin: 0 0 10px; }
+  .con-code .manual { justify-content: center; }
+  #con-nurse-code { letter-spacing: .2em; text-align: center; }
 
   /* Every card: a thin white border and a soft white glow. */
   section, #logwrap {
@@ -407,6 +430,34 @@
   .after { padding-top: 14px; margin-top: auto; }
   .small { font-size: 11.5px; color: var(--dim); line-height: 1.45; margin: 10px 0 0; }
 
+  /* Remote card */
+  #rc:focus { outline: none; }
+  #rc:focus-within { box-shadow: var(--card-glow), 0 0 0 2px var(--accent-glow); }
+  .rc-body { display: flex; gap: 14px; align-items: center; justify-content: center; }
+  .dpad {
+    display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 40px); gap: 5px;
+  }
+  .dpad button { padding: 0; font-size: 12px; }
+  .dpad .up { grid-area: 1 / 2; } .dpad .left { grid-area: 2 / 1; } .dpad .ok { grid-area: 2 / 2; }
+  .dpad .right { grid-area: 2 / 3; } .dpad .down { grid-area: 3 / 2; }
+  .dpad .ok { font-weight: 650; border-color: var(--accent); color: var(--accent); }
+  .rc-side { display: flex; flex-direction: column; gap: 6px; }
+  .rc-side button { min-width: 84px; }
+  .rc-row { margin-top: 12px; justify-content: center; }
+  .rc-power { border-color: var(--bad); color: var(--bad); }
+  .digits { display: grid; grid-template-columns: repeat(3, 52px); gap: 5px; justify-content: center; margin-top: 10px; }
+  .digits button { padding: 6px 0; }
+  .rc-code { display: flex; gap: 7px; flex-wrap: wrap; }
+  .rc-code input {
+    width: 150px; padding: 6px 10px; font: 600 15px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); color: var(--text);
+  }
+  #rc-status { text-align: center; min-height: 1.45em; }
+  #rc-err { color: var(--bad); font-size: 12px; margin: 8px 0 0; min-height: 0; }
+  #rc-err:empty { display: none; }
+  button.pressed { background: var(--accent-weak); }
+
   #perm, #asleep {
     margin-bottom: 16px; padding: 12px 14px; border-radius: 12px;
     border: 1px solid var(--warn); border-left-width: 3px;
@@ -453,6 +504,31 @@
   .l-bad { color: var(--s-bad); }
   .l-cmd { color: #ffffff; font-weight: 600; }
   .l-head { color: #ffffff; font-weight: 700; }
+  /* A command waiting for the person at the TV. */
+  #askbar {
+    flex: none; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 10px 14px; border-top: 1px solid var(--line); background: var(--accent-weak);
+  }
+  #askbar[hidden] { display: none; }
+  #ask-text { flex: 1; min-width: 180px; font-size: 13px; font-weight: 600; color: var(--text); }
+  .ask-buttons { display: flex; gap: 7px; }
+  .ask-buttons[hidden] { display: none; }
+  .ask-buttons button { padding: 5px 13px; font-size: 12.5px; }
+  .l-ask { color: #ffd27a; font-weight: 600; }
+  /* The command line under the Monitor. */
+  #cmdline {
+    flex: none; display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-top: 1px solid var(--line); background: var(--screen);
+  }
+  #cmdline .prompt { font: 600 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--phosphor); white-space: nowrap; }
+  #cmd {
+    flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+    font: 12.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: #e8fffa; padding: 5px 2px;
+  }
+  #cmd::placeholder { color: rgba(116,224,204,.45); }
+  #cmdline button { padding: 3px 11px; font-size: 12px; }
+  #cmdline:focus-within { box-shadow: inset 0 0 0 1px var(--accent); }
+  .l-err { color: var(--s-bad); }
   .monitor-foot { flex: none; padding: 8px 14px; font-size: 11px; color: var(--dim); border-top: 1px solid var(--line); }
 
   /* Too small for one screen: let the page scroll and stack. */
@@ -604,7 +680,18 @@
           <li id="st-reach"><span class="dot"></span><span>Reach<span class="hint"></span></span></li>
           <li id="st-read"><span class="dot"></span><span>Identify<span class="hint"></span></span></li>
           <li id="st-adb"><span class="dot"></span><span>ADB<span class="hint"></span></span></li>
+          <li id="st-nurse"><span class="dot"></span><span>TV Nurse<span class="hint"></span></span></li>
         </ul>
+        <form class="con-code" id="con-nurse" hidden autocomplete="off">
+          <p class="lede">TV Nurse is installed. Enter the code on its screen. It changes every hour.</p>
+          <div class="manual">
+            <input id="con-nurse-code" inputmode="numeric" maxlength="7" spellcheck="false"
+                   placeholder="000 000" aria-label="Code shown on the TV Nurse screen">
+            <button class="primary" type="submit">Pair</button>
+          </div>
+          <p class="error" id="con-nurse-err"></p>
+          <button class="link" type="button" id="con-nurse-skip">Skip for now</button>
+        </form>
         <div class="notice" id="con-perm" hidden>
           <strong>macOS is blocking TV Doctor.</strong> System Settings &rsaquo; Privacy &amp;
           Security &rsaquo; Local Network &rsaquo; TV Doctor on.
@@ -636,14 +723,16 @@
     </div>
     <div class="vitals">
       <span class="vital" id="chip-awake">tv</span>
-      <span class="vital" id="chip-adb">adb</span>
+      <span class="vital" id="chip-link">connecting</span>
     </div>
     <div class="patient">
       <div>
         <b id="tvline">Admitting patient</b>
         <span class="mono" id="tvsub">reading vital signs</span>
       </div>
-      <button class="ghost" id="change">Change TV</button>
+      <div class="head-actions">
+        <button class="ghost" id="change">Change TV</button>
+      </div>
     </div>
   </div>
   <svg class="ecg" viewBox="0 0 1400 18" preserveAspectRatio="none" aria-hidden="true">
@@ -672,40 +761,19 @@
           <button data-cmd="routes">Channels</button>
         </div>
       </section>
-
-      <section>
-        <h2>Remote guide</h2>
-        <div class="row foot">
-          <button class="primary" data-cmd="guide">Open guide</button>
-        </div>
-      </section>
-
-      <section>
-        <h2>Apps</h2>
-        <div class="channels">
-          <div class="channel">
-            <span class="name">YouTube <span class="how">cast</span></span>
-            <button data-cmd="launch-youtube">Start</button>
-            <button data-cmd="stop-youtube">Stop</button>
-          </div>
-          <div class="channel">
-            <span class="name">Netflix <span class="how">dial</span></span>
-            <button data-cmd="launch-netflix">Start</button>
-            <button data-cmd="stop-netflix">Stop</button>
-          </div>
-          <div class="channel">
-            <span class="name">Spotify <span class="how">cast</span></span>
-            <button data-cmd="launch-spotify">Start</button>
-            <button data-cmd="stop-spotify">Stop</button>
-          </div>
-          <div class="channel">
-            <span class="name">DStv <span class="how">no receiver</span></span>
-            <button data-cmd="launch-dstv">Try</button>
-            <button data-cmd="force-stop-dstv">Force stop</button>
-          </div>
-        </div>
-        <div class="row after">
-          <button data-cmd="force-stop">Home screen</button>
+      <section id="nurse">
+        <h2>TV Nurse <span class="badge" id="nurse-badge">checking</span></h2>
+        <p class="note" id="nurse-note">The companion app on the TV, for TVs without ADB.</p>
+        <form class="rc-code" id="nurse-form" hidden autocomplete="off">
+          <input id="nurse-code" inputmode="numeric" maxlength="7" spellcheck="false"
+                 placeholder="Code on TV Nurse" aria-label="Code shown on the TV Nurse screen">
+          <button class="primary" type="submit">Pair</button>
+        </form>
+        <p class="error" id="nurse-err"></p>
+        <div class="row foot" id="nurse-actions">
+          <button class="primary" data-cmd="nurse-report">Report</button>
+          <button data-cmd="nurse-free">Free memory</button>
+          <button data-cmd="nurse-status">Status</button>
         </div>
       </section>
 
@@ -739,15 +807,61 @@
               <button data-cmd="bloat-auto">Switch off</button>
             </span>
           </div>
-          <div class="task">
-            <span class="name"><b>App notes</b><span class="what">Your four main apps</span></span>
-            <button data-cmd="apps">Run</button>
-          </div>
         </div>
         <div class="row sep after">
-          <button class="danger" data-cmd="reboot">Restart TV</button>
           <button class="danger" data-cmd="restore">Undo changes</button>
         </div>
+      </section>
+
+      <section id="rc" class="dock" tabindex="-1" aria-label="Remote control">
+        <h2>Remote <span class="badge" id="rc-badge">not paired</span>
+          <button class="danger rc-restart" id="restart" data-cmd="reboot">Restart TV</button></h2>
+
+        <div id="rc-pair" hidden>
+          <p class="note">Pair once and this window works as the TV's remote. No ADB needed.</p>
+          <div class="row" id="rc-pair-start-row">
+            <button class="primary" id="rc-pair-start">Pair</button>
+          </div>
+          <form class="rc-code" id="rc-code-form" hidden autocomplete="off">
+            <input id="rc-code" maxlength="6" spellcheck="false" placeholder="Code on the TV"
+                   aria-label="Pairing code shown on the TV">
+            <button class="primary" type="submit">Pair</button>
+            <button type="button" id="rc-pair-cancel">Cancel</button>
+          </form>
+        </div>
+
+        <div id="rc-pad" hidden>
+          <div class="rc-body">
+            <div class="dpad" role="group" aria-label="Direction pad">
+              <button class="up" data-key="up" aria-label="Up">&#9650;</button>
+              <button class="left" data-key="left" aria-label="Left">&#9664;</button>
+              <button class="ok" data-key="ok">OK</button>
+              <button class="right" data-key="right" aria-label="Right">&#9654;</button>
+              <button class="down" data-key="down" aria-label="Down">&#9660;</button>
+            </div>
+            <div class="rc-side">
+              <button data-key="back">Back</button>
+              <button data-key="home">Home</button>
+              <button data-key="settings">Settings</button>
+            </div>
+          </div>
+          <div class="row rc-row">
+            <button data-key="voldown" aria-label="Volume down">Vol &minus;</button>
+            <button data-key="mute">Mute</button>
+            <button data-key="volup" aria-label="Volume up">Vol +</button>
+            <button data-key="power" class="rc-power">Power</button>
+            <button id="rc-digits-toggle" aria-expanded="false">123</button>
+          </div>
+          <div class="digits" id="rc-digits" hidden>
+            <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+            <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+            <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+            <span></span><button data-key="0">0</button><span></span>
+          </div>
+          <p class="small" id="rc-status"></p>
+        </div>
+
+        <p class="error" id="rc-err"></p>
       </section>
     </div>
   </div>
@@ -758,15 +872,49 @@
       <span id="running">working</span>
       <div class="bar-actions">
         <button id="cancel" class="danger">Stop</button>
+        <button data-cmd="guide">Guide</button>
+        <button id="help">Help</button>
         <button id="clear">Clear</button>
       </div>
     </div>
     <div class="screen"><pre id="log">No output yet.</pre></div>
+    <div id="askbar" hidden>
+      <span id="ask-text"></span>
+      <span class="ask-buttons" id="ask-steps">
+        <button class="primary" data-answer="done">Done</button>
+        <button data-answer="skip">Skip</button>
+        <button data-answer="stop">Stop</button>
+      </span>
+      <span class="ask-buttons" id="ask-yn" hidden>
+        <button class="primary" data-answer="yes">Yes</button>
+        <button data-answer="no">No</button>
+      </span>
+    </div>
+    <form id="cmdline" autocomplete="off">
+      <label for="cmd" class="prompt">tvdoctor &rsaquo;</label>
+      <input id="cmd" spellcheck="false" autocapitalize="off"
+             placeholder="type a command, or help" aria-label="TV Doctor command">
+      <button type="submit">Run</button>
+    </form>
   </div>
 </div>
+
 </div>
 
 <script>
+  // TV Doctor's server only takes API calls carrying this header, which other
+  // web pages cannot add. See from_our_page in server.rs.
+  (function () {
+    var plain = window.fetch.bind(window);
+    window.fetch = function (url, opts) {
+      opts = opts || {};
+      var headers = opts.headers || {};
+      headers['X-TVDoctor'] = '1';
+      opts.headers = headers;
+      return plain(url, opts);
+    };
+  })();
+
   function $(id) { return document.getElementById(id); }
 
   // ================================================================
@@ -997,7 +1145,8 @@
     $('con-sub').textContent = tv.ip;
     $('con-fail').hidden = true;
     $('con-perm').hidden = true;
-    setStep('st-reach', 'active'); setStep('st-read'); setStep('st-adb');
+    setStep('st-reach', 'active'); setStep('st-read'); setStep('st-adb'); setStep('st-nurse');
+    $('con-nurse').hidden = true;
     var started = Date.now();
 
     fetch('/api/connect?ip=' + encodeURIComponent(tv.ip), { method: 'POST' })
@@ -1021,16 +1170,58 @@
           setStep('st-adb', 'active');
           return wait(450);
         }).then(function () {
-          setStep('st-adb', t.adb ? 'done' : 'soft',
-            t.adb ? 'On' : 'Off');
-          $('stage').classList.add('ok');
-          setScope(t.adb ? 'link' : 'noadb');
-          $('con-title').textContent = 'Connected';
-          return wait(900);
-        }).then(enterPlatform);
+          setStep('st-adb', t.adb ? 'done' : 'soft', t.adb ? 'On' : 'Off');
+          if (t.adb) {
+            setStep('st-nurse', 'soft', 'Not needed');
+            return connected('link');
+          }
+          // No ADB: is TV Nurse installed, and does it know us?
+          setStep('st-nurse', 'active');
+          return wait(450).then(function () {
+            if (res.nurse === 'paired') {
+              setStep('st-nurse', 'done', 'Installed and paired');
+              return connected('link');
+            }
+            if (res.nurse === 'code') {
+              setStep('st-nurse', 'active', 'Installed, needs its code');
+              $('con-nurse').hidden = false;
+              $('con-nurse-err').textContent = '';
+              $('con-nurse-code').value = '';
+              $('con-nurse-code').focus();
+              return;
+            }
+            setStep('st-nurse', 'fail', 'Not installed');
+            return connected('noadb');
+          });
+        });
       })
       .catch(function () { failed('TV Doctor stopped answering. Is it still running?'); });
   }
+
+  function connected(scope) {
+    $('stage').classList.add('ok');
+    setScope(scope);
+    $('con-title').textContent = 'Connected';
+    return wait(900).then(enterPlatform);
+  }
+
+  $('con-nurse').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = $('con-nurse-code').value.replace(/\D/g, '');
+    if (code.length !== 6) { $('con-nurse-err').textContent = 'The code is six digits.'; return; }
+    $('con-nurse-err').textContent = '';
+    fetch('/api/nurse/pair?code=' + code, { method: 'POST' }).then(json).then(function (r) {
+      if (!r.ok) { $('con-nurse-err').textContent = r.error; return; }
+      $('con-nurse').hidden = true;
+      setStep('st-nurse', 'done', 'Installed and paired');
+      connected('link');
+    }).catch(function () { $('con-nurse-err').textContent = 'TV Doctor stopped answering.'; });
+  });
+  $('con-nurse-skip').addEventListener('click', function () {
+    $('con-nurse').hidden = true;
+    setStep('st-nurse', 'soft', 'Not paired yet');
+    connected('noadb');
+  });
 
   function failed(message, blocked) {
     setStep('st-reach', 'fail', message);
@@ -1074,11 +1265,20 @@
     refreshState();
     clearInterval(stateTimer);
     stateTimer = setInterval(refreshState, 5000);
+    rcPairing = false;
+    rcRefresh();
+    clearInterval(rcTimer);
+    rcTimer = setInterval(rcRefresh, 3000);
+    nurseRefresh();
+    clearInterval(nurseTimer);
+    nurseTimer = setInterval(nurseRefresh, 8000);
   }
 
   function leavePlatform() {
     if (document.body.classList.contains('busy')) return;
     clearInterval(stateTimer);
+    clearInterval(rcTimer);
+    clearInterval(nurseTimer);
     $('platform').hidden = true;
     $('home').hidden = false;
     loadHome();
@@ -1086,6 +1286,7 @@
 
   function classFor(line) {
     if (line.indexOf('$ tvdoctor') === 0) return 'l-cmd';
+    if (line.trim().indexOf('??') === 0) return 'l-ask';
     if (line.indexOf('OK   ') > -1) return 'l-ok';
     if (line.indexOf('WARN ') > -1) return 'l-warn';
     if (line.indexOf('FAIL ') > -1 || line.indexOf('error:') > -1) return 'l-bad';
@@ -1103,13 +1304,62 @@
       log.appendChild(span);
     });
     log.scrollTop = log.scrollHeight;
+    var last = '';
+    for (var i = lines.length - 1; i >= 0; i--) { if (lines[i].trim()) { last = lines[i].trim(); break; } }
+    if (last) showAsk(last);
+  }
+
+  // A line starting "??" is a command waiting for the person at the TV.
+  function showAsk(last) {
+    var asking = last.indexOf('??') === 0;
+    $('askbar').hidden = !asking;
+    if (!asking) return;
+    var yesNo = /\[y\/N\]/.test(last);
+    $('ask-text').textContent = last.replace(/^\?\?\s*/, '').replace(/\s*\[[^\]]*\]\s*$/, '');
+    $('ask-steps').hidden = yesNo;
+    $('ask-yn').hidden = !yesNo;
+  }
+
+  document.querySelectorAll('[data-answer]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      $('askbar').hidden = true;
+      fetch('/api/input?a=' + b.dataset.answer, { method: 'POST' }).catch(function () {});
+    });
+  });
+
+  // What the buttons need. A button is enabled only when nothing is running
+  // and the way it reaches the TV is connected.
+  var link = { busy: false, adb: false, nurse: false, nursePaired: false, remote: false };
+
+  // data-cmd -> what it needs, and the hint shown while it is not there.
+  function needFor(b) {
+    var cmd = b.dataset.cmd;
+    if (b.closest('.treat')) return [link.adb || link.nurse, 'Needs ADB or TV Nurse'];
+    if (cmd === 'nurse-report' || cmd === 'nurse-free') return [link.nursePaired, 'Needs TV Nurse paired'];
+    if (cmd === 'reboot') return [link.adb || link.nursePaired || link.remote, 'Needs ADB, TV Nurse or the remote'];
+    return [true, ''];
+  }
+
+  function applyButtons() {
+    document.querySelectorAll('button[data-cmd]').forEach(function (b) {
+      var need = needFor(b);
+      b.disabled = link.busy || !need[0];
+      if (!need[0]) b.title = need[1]; else b.removeAttribute('title');
+    });
+    $('change').disabled = link.busy;
+    $('help').disabled = link.busy;
+    $('cmd').placeholder = link.busy ? 'type an answer here when asked' : 'type a command, or help';
+    // The remote's keys work only while it is connected.
+    document.querySelectorAll('#rc-pad [data-key], #rc-digits-toggle').forEach(function (b) {
+      b.disabled = !link.remote;
+    });
   }
 
   function setBusy(busy) {
     $('running').className = busy ? 'on' : '';
     document.body.classList.toggle('busy', busy);
-    document.querySelectorAll('button[data-cmd]').forEach(function (b) { b.disabled = busy; });
-    $('change').disabled = busy;
+    link.busy = busy;
+    applyButtons();
   }
 
   function pollLog() {
@@ -1118,7 +1368,7 @@
         if (data.lines.length) { append(data.lines); next = data.next; }
         setBusy(data.running);
         if (data.running) { setTimeout(pollLog, 600); }
-        else { polling = false; refreshState(); }
+        else { polling = false; $('askbar').hidden = true; refreshState(); }
       })
       .catch(function () { polling = false; setBusy(false); });
   }
@@ -1154,23 +1404,34 @@
           awake.className = 'vital';
         }
 
-        var adb = $('chip-adb');
-        if (tv.pending) {
-          adb.textContent = 'checking adb';
-          adb.className = 'vital';
+        // How TV Doctor reaches the set: ADB, TV Nurse, or neither.
+        var chip = $('chip-link');
+        if (tv.pending || (!tv.awake && !tv.down)) {
+          chip.textContent = 'connecting';
+          chip.className = 'vital';
+        } else if (tv.adb) {
+          chip.textContent = 'connected via adb';
+          chip.className = 'vital on';
+        } else if (tv.nurse) {
+          chip.textContent = 'connected via tv nurse';
+          chip.className = 'vital on';
         } else {
-          adb.textContent = tv.adb ? 'adb ready' : 'adb unavailable';
-          adb.className = 'vital ' + (tv.adb ? 'on' : 'off');
+          chip.textContent = 'no adb or tv nurse';
+          chip.className = 'vital off';
         }
 
         var badge = $('adb-badge');
-        badge.textContent = tv.adb ? 'ready' : 'needs adb';
-        badge.className = 'badge' + (tv.adb ? ' ready' : '');
+        badge.textContent = tv.adb ? 'adb' : tv.nurse ? 'via tv nurse' : 'needs adb or tv nurse';
+        badge.className = 'badge' + (tv.adb || tv.nurse ? ' ready' : '');
 
         var blocked = tv.down && tv.lan === false;
         var standby = tv.down && tv.lan !== false;
         $('perm').style.display = blocked ? 'block' : 'none';
         $('asleep').style.display = standby ? 'block' : 'none';
+
+        link.adb = !!tv.adb;
+        link.nurse = !!tv.nurse;
+        applyButtons();
 
         if (data.running && !polling) { polling = true; pollLog(); }
       })
@@ -1178,9 +1439,13 @@
   }
 
   document.querySelectorAll('button[data-cmd]').forEach(function (b) {
-    b.addEventListener('click', function () { run(b.dataset.cmd); });
+    b.addEventListener('click', function () {
+      if (b.dataset.cmd === 'reboot' && !window.confirm('Restart the TV now?')) return;
+      run(b.dataset.cmd);
+    });
   });
   $('change').addEventListener('click', leavePlatform);
+
   $('cancel').addEventListener('click', function () {
     fetch('/api/cancel', { method: 'POST' }).catch(function () {});
   });
@@ -1189,6 +1454,210 @@
       next = 0; fresh = true; log.textContent = 'Cleared.';
     });
   });
+
+  // ================================================================
+  //  Remote
+  // ================================================================
+  var rcTimer = null, rcPairing = false;
+  var APP_NAMES = {
+    'com.google.android.youtube.tv': 'YouTube',
+    'com.netflix.ninja': 'Netflix',
+    'com.spotify.tv.android': 'Spotify',
+    'com.android.tv.settings': 'Settings',
+    'com.google.android.tvlauncher': 'Home screen',
+    'com.google.android.leanbacklauncher': 'Home screen',
+    'com.google.android.apps.mediashell': 'Google Cast',
+    'com.google.android.backdrop': 'Screen saver',
+    'com.dstvmobile.android': 'DStv',
+    'com.tvdoctor.helper': 'TV Nurse',
+    'com.esaba.downloader': 'Downloader'
+  };
+
+  function rcError(text) { $('rc-err').textContent = text || ''; }
+
+  function rcRender(r) {
+    link.remote = !!(r.paired && r.connected);
+    applyButtons();
+    var badge = $('rc-badge');
+    var paired = r.paired;
+    $('rc-pair').hidden = paired && !rcPairing;
+    $('rc-pad').hidden = !paired || rcPairing;
+    $('rc-code-form').hidden = !rcPairing;
+    $('rc-pair-start-row').hidden = rcPairing;
+
+    if (!paired) {
+      badge.textContent = 'not paired'; badge.className = 'badge';
+    } else if (r.connected) {
+      badge.textContent = 'connected'; badge.className = 'badge ready';
+    } else {
+      badge.textContent = r.connecting ? 'connecting' : 'offline'; badge.className = 'badge';
+    }
+
+    var bits = [];
+    if (r.on === false) bits.push('screen off');
+    if (r.volume !== null) bits.push('volume ' + r.volume + (r.muted ? ', muted' : ''));
+    if (r.app) bits.push(APP_NAMES[r.app] || r.app);
+    $('rc-status').textContent = r.connected ? bits.join(' \u00b7 ') : (paired ? 'Reconnecting to the TV\u2026' : '');
+    if (paired && r.connected) rcError('');
+    else if (paired && r.error && !r.connecting) rcError(r.error);
+  }
+
+  function rcRefresh() {
+    fetch('/api/remote').then(json).then(rcRender).catch(function () {});
+  }
+
+  function rcKey(key, btn) {
+    if (btn) { btn.classList.add('pressed'); setTimeout(function () { btn.classList.remove('pressed'); }, 160); }
+    fetch('/api/remote/key?k=' + encodeURIComponent(key), { method: 'POST' }).then(json)
+      .then(function (r) { if (!r.ok) rcError(r.error); else rcError(''); })
+      .catch(function () { rcError('TV Doctor stopped answering.'); });
+  }
+
+  document.querySelectorAll('[data-key]').forEach(function (b) {
+    b.addEventListener('click', function () { rcKey(b.dataset.key, b); });
+  });
+
+  $('rc-digits-toggle').addEventListener('click', function () {
+    var open = $('rc-digits').hidden;
+    $('rc-digits').hidden = !open;
+    this.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  $('rc-pair-start').addEventListener('click', function () {
+    var b = this;
+    b.disabled = true; b.textContent = 'Asking the TV\u2026'; rcError('');
+    fetch('/api/remote/pair', { method: 'POST' }).then(json).then(function (r) {
+      b.disabled = false; b.textContent = 'Pair';
+      if (!r.ok) { rcError(r.error); return; }
+      rcPairing = true;
+      rcRefresh();
+      setTimeout(function () { $('rc-code').value = ''; $('rc-code').focus(); }, 0);
+    }).catch(function () { b.disabled = false; b.textContent = 'Pair'; rcError('TV Doctor stopped answering.'); });
+  });
+
+  $('rc-code-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = $('rc-code').value.trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(code)) { rcError('The code is six characters, 0-9 and A-F.'); return; }
+    rcError('');
+    fetch('/api/remote/code?c=' + encodeURIComponent(code), { method: 'POST' }).then(json).then(function (r) {
+      if (!r.ok) {
+        rcError(r.error);
+        if (r.error.indexOf('match') < 0 && r.error.indexOf('six') < 0) { rcPairing = false; rcRefresh(); }
+        return;
+      }
+      rcPairing = false;
+      rcRefresh();
+      $('rc').focus();
+    }).catch(function () { rcError('TV Doctor stopped answering.'); });
+  });
+
+  $('rc-pair-cancel').addEventListener('click', function () {
+    rcPairing = false; rcError('');
+    fetch('/api/remote/cancel', { method: 'POST' }).finally(rcRefresh);
+  });
+
+  // Keyboard, while the remote card has focus: arrows, Enter, Backspace,
+  // H for home, digits.
+  var KEYMAP = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+                 Enter: 'ok', Backspace: 'back', Escape: 'back', h: 'home', H: 'home' };
+  $('rc').addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' || $('rc-pad').hidden || e.metaKey || e.ctrlKey || e.altKey) return;
+    var key = KEYMAP[e.key] || (/^[0-9]$/.test(e.key) ? e.key : null);
+    if (!key) return;
+    e.preventDefault();
+    var btn = document.querySelector('#rc-pad [data-key="' + key + '"]');
+    rcKey(key, btn);
+  });
+  $('rc').addEventListener('mousedown', function (e) {
+    if (e.target === this || e.target.closest('#rc-pad')) this.focus({ preventScroll: true });
+  });
+
+  // ================================================================
+  //  TV Nurse
+  // ================================================================
+  var nurseTimer = null;
+  function nurseRender(n) {
+    var badge = $('nurse-badge'), note = $('nurse-note');
+    var paired = n.answering && n.paired;
+    link.nursePaired = !!paired;
+    applyButtons();
+    $('nurse-form').hidden = !n.answering || n.paired;
+    document.querySelectorAll('#nurse-actions button').forEach(function (b) {
+      b.hidden = !paired && b.dataset.cmd !== 'nurse-status';
+    });
+    if (!n.answering) {
+      badge.textContent = 'not found'; badge.className = 'badge';
+      note.textContent = 'Not answering. Open TV Nurse on the TV, or install it (see the README).';
+    } else if (!n.paired) {
+      badge.textContent = n.locked ? 'locked' : 'needs code'; badge.className = 'badge';
+      note.textContent = n.locked
+        ? 'Too many wrong codes. TV Nurse is locked for a minute.'
+        : 'Enter the code on the TV Nurse screen. It changes every hour.';
+    } else {
+      badge.textContent = 'paired'; badge.className = 'badge ready';
+      var minutes = Math.max(1, Math.ceil((n.expires || 0) / 60));
+      var missing = [];
+      if (!n.usage) missing.push('Usage access');
+      if (!n.energy) missing.push('Energy optimisation');
+      note.textContent = 'Code changes in ' + minutes + ' min. ' + (missing.length
+        ? 'Still to allow on the TV: ' + missing.join(' and ') + '.'
+        : 'Version ' + n.version + ', no ADB needed.');
+    }
+  }
+  function nurseRefresh() {
+    fetch('/api/nurse').then(json).then(nurseRender).catch(function () {});
+  }
+  $('nurse-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = $('nurse-code').value.replace(/\D/g, '');
+    if (code.length !== 6) { $('nurse-err').textContent = 'The code is six digits.'; return; }
+    $('nurse-err').textContent = '';
+    fetch('/api/nurse/pair?code=' + code, { method: 'POST' }).then(json).then(function (r) {
+      if (!r.ok) { $('nurse-err').textContent = r.error; return; }
+      $('nurse-code').value = '';
+      nurseRefresh();
+    }).catch(function () { $('nurse-err').textContent = 'TV Doctor stopped answering.'; });
+  });
+
+  // ================================================================
+  //  The command line
+  // ================================================================
+  var typed = [], back = 0;
+  function startPolling() {
+    setBusy(true);
+    if (!polling) { polling = true; pollLog(); }
+  }
+  function say(text) { append([text]); log.lastChild.className = 'l-err'; }
+
+  function exec(line) {
+    fetch('/api/exec?line=' + encodeURIComponent(line), { method: 'POST' }).then(json).then(function (r) {
+      if (!r.ok) { say('  ' + r.error); return; }
+      startPolling();
+    }).catch(function () { say('  TV Doctor stopped answering.'); });
+  }
+
+  $('cmdline').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var line = $('cmd').value.trim();
+    if (!line) return;
+    $('cmd').value = '';
+    // While a command is running, what is typed answers its question.
+    if (link.busy) {
+      $('askbar').hidden = true;
+      fetch('/api/input?text=' + encodeURIComponent(line), { method: 'POST' }).then(json).then(function (r) {
+        if (!r.ok) say('  ' + r.error);
+      });
+      return;
+    }
+    typed.push(line); back = typed.length;
+    exec(line);
+  });
+  $('cmd').addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowUp' && back > 0) { back--; this.value = typed[back]; e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { back = Math.min(typed.length, back + 1); this.value = typed[back] || ''; e.preventDefault(); }
+  });
+  $('help').addEventListener('click', function () { if (!link.busy) exec('help'); });
 
   loadHome();
 </script>

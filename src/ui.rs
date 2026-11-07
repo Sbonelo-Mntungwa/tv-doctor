@@ -59,7 +59,13 @@ pub fn human(bytes: u64) -> String {
 /// Ask a question. An empty answer or a closed stdin counts as "no", so the
 /// tool never loops forever when it is run without a terminal.
 pub fn prompt(message: &str) -> String {
-    print!("{}", message);
+    // Without a terminal (the app window runs commands with a pipe) end the
+    // line, or the question would sit unseen until the answer arrived.
+    if tty() {
+        print!("{}", message);
+    } else {
+        println!("{}", message);
+    }
     let _ = io::stdout().flush();
     let mut line = String::new();
     match io::stdin().read_line(&mut line) {

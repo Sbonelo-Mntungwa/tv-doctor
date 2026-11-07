@@ -138,7 +138,7 @@ fn now_utc() -> String {
 }
 
 /// Days-from-epoch to a civil date, after Howard Hinnant's algorithm.
-fn civil_from_epoch(secs: u64) -> (i64, u32, u32, u32, u32, u32) {
+pub fn civil_from_epoch(secs: u64) -> (i64, u32, u32, u32, u32, u32) {
     let days = (secs / 86_400) as i64;
     let rem = secs % 86_400;
     let z = days + 719_468;

@@ -131,6 +131,18 @@ pub fn http_request(
     path: &str,
     timeout_ms: u64,
 ) -> Option<String> {
+    http_request_with(method, ip, port, path, &[], timeout_ms)
+}
+
+/// The same, with extra headers.
+pub fn http_request_with(
+    method: &str,
+    ip: &str,
+    port: u16,
+    path: &str,
+    headers: &[(&str, &str)],
+    timeout_ms: u64,
+) -> Option<String> {
     let addr: IpAddr = ip.parse().ok()?;
     let timeout = Duration::from_millis(timeout_ms);
     let mut stream =
@@ -140,10 +152,14 @@ pub fn http_request(
     // HTTP/1.1, not 1.0: the TV's Cast server closes a 1.0 request with an
     // empty reply. Connection: close asks it to hang up once it has answered,
     // and body_complete below stops us waiting if it does not.
+    let extra: String = headers
+        .iter()
+        .map(|(name, value)| format!("{}: {}\r\n", name, value))
+        .collect();
     let request = format!(
         "{} {} HTTP/1.1\r\nHost: {}:{}\r\nUser-Agent: tvdoctor/1.0\r\n\
-         Accept: */*\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
-        method, path, ip, port
+         Accept: */*\r\n{}Content-Length: 0\r\nConnection: close\r\n\r\n",
+        method, path, ip, port, extra
     );
     stream.write_all(request.as_bytes()).ok()?;
 

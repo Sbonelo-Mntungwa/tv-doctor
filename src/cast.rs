@@ -5,14 +5,16 @@
 //! `openssl s_client`, which is already on the machine. The protobuf messages
 //! involved are small enough to encode by hand.
 //!
-//! No pairing is needed, unlike the Android TV remote protocol, which is why
-//! this is the route worth taking.
+//! No pairing is needed, unlike the Android TV remote protocol in remote.rs,
+//! which is why launching apps goes this way.
 
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+
+use crate::proto::{field_string, field_varint, read_varint};
 
 pub const CAST_PORT: u16 = 8009;
 const CONNECT_NS: &str = "urn:x-cast:com.google.cast.tp.connection";
@@ -33,34 +35,8 @@ pub fn app_entry(label: &str) -> Option<(&'static str, &'static str, &'static st
 }
 
 // ---------------------------------------------------------------------------
-// protobuf by hand
+// frames
 // ---------------------------------------------------------------------------
-fn varint(mut value: u64) -> Vec<u8> {
-    let mut out = Vec::new();
-    loop {
-        let byte = (value & 0x7F) as u8;
-        value >>= 7;
-        out.push(if value > 0 { byte | 0x80 } else { byte });
-        if value == 0 {
-            return out;
-        }
-    }
-}
-
-fn field_string(number: u64, text: &str) -> Vec<u8> {
-    let bytes = text.as_bytes();
-    let mut out = varint((number << 3) | 2);
-    out.extend(varint(bytes.len() as u64));
-    out.extend_from_slice(bytes);
-    out
-}
-
-fn field_varint(number: u64, value: u64) -> Vec<u8> {
-    let mut out = varint((number << 3) | 0);
-    out.extend(varint(value));
-    out
-}
-
 /// One CastMessage, length prefixed as the wire format wants.
 fn frame(destination: &str, namespace: &str, payload: &str) -> Vec<u8> {
     let mut message = Vec::new();
@@ -74,23 +50,6 @@ fn frame(destination: &str, namespace: &str, payload: &str) -> Vec<u8> {
     let mut out = (message.len() as u32).to_be_bytes().to_vec();
     out.extend(message);
     out
-}
-
-fn read_varint(buffer: &[u8], index: &mut usize) -> Option<u64> {
-    let mut result: u64 = 0;
-    let mut shift = 0;
-    loop {
-        let byte = *buffer.get(*index)?;
-        *index += 1;
-        result |= ((byte & 0x7F) as u64) << shift;
-        if byte & 0x80 == 0 {
-            return Some(result);
-        }
-        shift += 7;
-        if shift > 63 {
-            return None;
-        }
-    }
 }
 
 /// The JSON payload (field 6) of one CastMessage.
@@ -143,7 +102,7 @@ fn parse_frames(buffer: &[u8]) -> (Vec<String>, usize) {
 // ---------------------------------------------------------------------------
 // the TLS pipe
 // ---------------------------------------------------------------------------
-fn openssl_path() -> Result<String, String> {
+pub fn openssl_path() -> Result<String, String> {
     if let Ok(path) = std::env::var("PATH") {
         for dir in path.split(':') {
             let candidate = format!("{}/openssl", dir);
@@ -157,7 +116,7 @@ fn openssl_path() -> Result<String, String> {
             return Ok(candidate.to_string());
         }
     }
-    Err("openssl not found, which Cast needs for TLS".to_string())
+    Err("openssl not found, which TV Doctor needs for TLS".to_string())
 }
 
 /// Send frames and collect replies until one contains `until`, or time runs out.

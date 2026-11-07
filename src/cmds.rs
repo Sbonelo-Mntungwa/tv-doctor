@@ -9,6 +9,7 @@ use crate::catalog::{
 };
 use crate::config;
 use crate::net::{self, ADB_PORT};
+use crate::remote;
 use crate::ui::{self, bad, hdr, human, info, kv, ok, warn};
 
 /// Everything the command line can ask for.
@@ -988,7 +989,7 @@ pub fn guide() {
     info("with DStv, which has grown heavier every year.");
 
     hdr("5. Restart properly");
-    println!("  Settings -> Device Preferences -> Restart");
+    println!("  Settings -> Device Preferences -> About -> Restart");
     println!();
     warn("Use Restart, not the power button. The power button is standby: the TV");
     warn("keeps running and nothing is released.");
@@ -1009,7 +1010,7 @@ pub fn guide() {
 }
 
 /// Which TV to aim a no-ADB command at.
-fn remembered_ip(opts: &Opts) -> Result<String, String> {
+pub fn remembered_ip(opts: &Opts) -> Result<String, String> {
     match opts.ip.clone().or_else(|| config::load().ip) {
         Some(ip) if !ip.is_empty() => Ok(ip),
         _ => {
@@ -1386,5 +1387,131 @@ fn displace(ip: &str, blamed: Option<&str>) -> Result<(), String> {
         warn("stop needs ADB, which this TV does not expose.");
     }
     println!();
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// remote: this Mac as the TV's remote control, no ADB needed
+// ---------------------------------------------------------------------------
+pub fn remote(opts: &Opts) -> Result<(), String> {
+    let sub = opts.rest.first().map(|s| s.as_str()).unwrap_or("status");
+    match sub {
+        "keys" => {
+            hdr("Remote keys");
+            let names: Vec<&str> = remote::KEYS.iter().map(|(n, _)| *n).collect();
+            println!("  {}", names.join(" "));
+            println!();
+            println!("  Digits can run together (1969). hold:NAME holds a key for 2s,");
+            println!("  hold:NAME:SECONDS for longer, wait:SECONDS pauses.");
+            println!();
+            Ok(())
+        }
+        "pair" => remote_pair(opts),
+        "forget" => {
+            let ip = remembered_ip(opts)?;
+            remote::forget_paired(&ip);
+            ok(&format!("forgot the pairing with {}", ip));
+            Ok(())
+        }
+        "status" => remote_status(opts),
+        "press" => remote_press(opts),
+        "link" => {
+            let ip = remembered_ip(opts)?;
+            let link = opts.rest.get(1).ok_or("give a link, e.g. tvdoctor remote link https://www.youtube.com")?;
+            let session = remote::Remote::connect(&ip)?;
+            session.open_link(link)?;
+            std::thread::sleep(Duration::from_millis(300));
+            ok(&format!("asked the TV to open {}", link));
+            Ok(())
+        }
+        other => Err(format!(
+            "unknown remote command '{}'. Try: pair, status, press, keys, link, forget",
+            other
+        )),
+    }
+}
+
+fn remote_pair(opts: &Opts) -> Result<(), String> {
+    let ip = remembered_ip(opts)?;
+    hdr("Pair this Mac as a remote");
+    kv("TV", &ip);
+    info("asking the TV to pair...");
+    let pairing = remote::start_pairing(&ip)?;
+    ok("the TV is showing a code");
+    for _ in 0..3 {
+        let code = ui::prompt("  Type the code from the TV screen: ");
+        if code == "q" || code.is_empty() {
+            pairing.cancel();
+            warn("pairing cancelled");
+            return Ok(());
+        }
+        match pairing.finish(&code) {
+            Ok(()) => {
+                ok("paired. This Mac is now a remote for the TV");
+                println!();
+                println!("  Try:  tvdoctor remote press home");
+                println!();
+                return Ok(());
+            }
+            Err(message) if message.contains("does not match") || message.contains("six characters") => {
+                warn(&message)
+            }
+            Err(message) => return Err(message),
+        }
+    }
+    pairing.cancel();
+    Err("three wrong codes. Run tvdoctor remote pair to try again".to_string())
+}
+
+fn remote_status(opts: &Opts) -> Result<(), String> {
+    let ip = remembered_ip(opts)?;
+    hdr("Remote");
+    kv("TV", &ip);
+    if !remote::is_paired(&ip) {
+        warn("not paired yet. Run: tvdoctor remote pair");
+        println!();
+        return Ok(());
+    }
+    let session = remote::Remote::connect(&ip)?;
+    // The TV reports power and volume just after the handshake.
+    std::thread::sleep(Duration::from_millis(1200));
+    let state = session.state();
+    ok("connected as a remote");
+    if !state.vendor.is_empty() || !state.model.is_empty() {
+        kv("Device", format!("{} {}", state.vendor, state.model).trim());
+    }
+    if let Some(on) = state.on {
+        kv("Screen", if on { "on" } else { "off" });
+    }
+    if let Some(volume) = state.volume {
+        let max = state.volume_max.map(|m| format!(" of {}", m)).unwrap_or_default();
+        let muted = if state.muted == Some(true) { ", muted" } else { "" };
+        kv("Volume", &format!("{}{}{}", volume, max, muted));
+    }
+    if !state.app.is_empty() {
+        kv("App in front", &state.app);
+    }
+    println!();
+    Ok(())
+}
+
+fn remote_press(opts: &Opts) -> Result<(), String> {
+    let ip = remembered_ip(opts)?;
+    let mut steps = Vec::new();
+    for token in opts.rest.iter().skip(1) {
+        steps.extend(remote::parse_step(token)?);
+    }
+    if steps.is_empty() {
+        return Err("name keys to press, e.g. tvdoctor remote press home down ok".to_string());
+    }
+    if config::dry_run() {
+        ui::dry(&format!("would press {}", opts.rest[1..].join(" ")));
+        return Ok(());
+    }
+    let session = remote::Remote::connect(&ip)?;
+    session.run(&steps)?;
+    // Let the last press reach the TV before the connection closes.
+    std::thread::sleep(Duration::from_millis(300));
+    ok(&format!("pressed {}", opts.rest[1..].join(" ")));
     Ok(())
 }
