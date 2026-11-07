@@ -567,7 +567,34 @@ pub fn clean(nurse: &Nurse, opts: &Opts) -> Result<(), String> {
         println!();
         return Ok(());
     }
-    for app in &big {
+    clear_caches(nurse, &big)
+}
+
+/// `tvdoctor nurse clean PKG...`: clear the caches of the apps named, whatever
+/// their size.
+fn clean_named(nurse: &Nurse, packages: &[String]) -> Result<(), String> {
+    hdr("Clearing caches (TV Nurse)");
+    let (usage, apps) = nurse.apps()?;
+    if !usage {
+        return Err("allow Usage access on the TV Nurse screen, so caches can be measured".to_string());
+    }
+    let mut chosen = Vec::new();
+    for pkg in packages {
+        match apps.iter().find(|a| &a.package == pkg) {
+            Some(app) => chosen.push(app.clone()),
+            None => warn(&format!("{} is not installed", pkg)),
+        }
+    }
+    if chosen.is_empty() {
+        println!();
+        return Ok(());
+    }
+    clear_caches(nurse, &chosen)
+}
+
+/// Open each app's page for the person to press Clear cache, and check it.
+fn clear_caches(nurse: &Nurse, big: &[App]) -> Result<(), String> {
+    for app in big {
         println!("  {:>10}  {}", human(app.cache.unwrap_or(0)), app.label);
     }
     if config::dry_run() {
@@ -578,7 +605,7 @@ pub fn clean(nurse: &Nurse, opts: &Opts) -> Result<(), String> {
     info("the TV shows each app's page. Press Clear cache, not Clear data");
 
     let mut cleared = 0u64;
-    for app in &big {
+    for app in big {
         let before = app.cache.unwrap_or(0);
         nurse.open_app_page(&app.package)?;
         match ask(&format!("{}: press Clear cache on the TV ({})", app.label, human(before))) {
@@ -1091,6 +1118,7 @@ pub fn command(opts: &Opts) -> Result<(), String> {
             println!();
             Ok(())
         }
+        "clean" if opts.rest.len() > 1 => clean_named(&nurse, &opts.rest[1..]),
         "clean" => clean(&nurse, opts),
         "open" | "launch" | "store" => {
             let pkg = opts
