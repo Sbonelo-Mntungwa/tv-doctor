@@ -10,6 +10,9 @@ mod cmds;
 mod config;
 mod menu;
 mod net;
+mod nurse;
+mod proto;
+mod remote;
 mod server;
 mod ui;
 
@@ -58,6 +61,25 @@ commands:
   reboot --yes         restart the TV
   shell '<cmd>'        run a raw adb shell command on the TV
   enable-adb           print the steps to switch ADB on
+  remote pair          pair this Mac as the TV's remote (no ADB needed)
+  remote status        power, volume and the app in front
+  remote press KEYS    press keys: home back up down left right ok
+                       settings volup voldown mute power, digits (1969),
+                       hold:back:15, wait:2. remote keys lists them all
+  remote link URL      open a link on the TV
+  (on a TV without ADB, report, clean, optimize, tune, bloat, restore,
+   update, apps, full and reboot work through TV Nurse instead)
+  nurse status         TV Nurse, the companion app on the TV: storage, memory
+  nurse pair CODE      pair with TV Nurse using the code on its screen
+  nurse report         per-app sizes, caches, and apps nobody uses
+  nurse free           close background apps to free memory
+  nurse clean [PKGS]   clear the biggest caches, with you at the remote
+  nurse open PKG       show an app's settings page on the TV
+  nurse launch PKG     open an app on the TV
+  nurse store PKG      show an app's Play Store page on the TV
+
+in the app window, type any of these into the Monitor without 'tvdoctor',
+for example:  nurse free   or   remote press home   (shell is terminal only)
 
 typical first run:
   tvdoctor discover
@@ -192,6 +214,8 @@ fn run() -> Result<(), String> {
         }
         "connect" => return cmds::connect(&opts),
         "pair" => return cmds::pair(&opts),
+        "remote" => return cmds::remote(&opts),
+        "nurse" | "helper" => return nurse::command(&opts),
         "enable-adb" => {
             println!();
             println!("{}", catalog::ENABLE_ADB_HELP);
@@ -201,8 +225,37 @@ fn run() -> Result<(), String> {
         _ => {}
     }
 
-    let tv = adb::get_tv(opts.ip.as_deref(), opts.dry_run, true)?
-        .ok_or("no TV to work with")?;
+    const TREATMENTS: &[&str] = &[
+        "report", "clean", "optimize", "optimise", "tune", "bloat", "restore", "update", "apps",
+        "full", "reboot", "shell",
+    ];
+    if !TREATMENTS.contains(&command.as_str()) {
+        return Err(format!("unknown command '{}'. Run tvdoctor --help", command));
+    }
+
+    // ADB when the TV allows it, TV Nurse when it does not.
+    let tv = match adb::get_tv(opts.ip.as_deref(), opts.dry_run, false)? {
+        Some(tv) => tv,
+        None => {
+            let ip = cmds::remembered_ip(&opts)?;
+            if let Some(nurse) = nurse::Nurse::reach(&ip, 5000) {
+                return nurse::run(&command, &nurse, &opts);
+            }
+            // TV Nurse is there but wants its new code: say that, not "enable ADB".
+            if let Err(message) = nurse::need(&ip) {
+                if !message.contains("not answering") {
+                    return Err(message);
+                }
+            }
+            println!();
+            println!("{}", catalog::ENABLE_ADB_HELP);
+            println!();
+            println!("  Or, on a TV that never allows ADB, install TV Nurse (see the README)");
+            println!("  and pair it:  tvdoctor nurse pair CODE");
+            println!();
+            return Err("this needs ADB or TV Nurse, and neither is answering".to_string());
+        }
+    };
 
     match command.as_str() {
         "report" => cmds::report(&tv),
